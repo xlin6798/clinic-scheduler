@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { FaEdit, FaTrash } from "react-icons/fa";
 import axios from "axios";
 axios.defaults.xsrfCookieName = "csrftoken";
 axios.defaults.xsrfHeaderName = "X-CSRFToken";
@@ -54,9 +55,15 @@ function App() {
         ...formData,
       };
 
-      await axios.post(API_URL, payload, {
-        withCredentials: true,
-      });
+      if (editingId) {
+        await axios.put(`/api/appointments/${editingId}/`, payload, {
+          withCredentials: true,
+        });
+      } else {
+        await axios.post(API_URL, payload, {
+          withCredentials: true,
+        });
+      }
 
       setFormData({
         patient_name: "",
@@ -66,24 +73,37 @@ function App() {
         status: "pending",
       });
 
+      setEditingId(null);
       fetchAppointments();
       setError("");
     } catch (err) {
       console.error(err.response?.data || err);
-      setError("Operation failed.");
+      setError("Failed to save appointment.");
     }
   };
 
   const handleDelete = async (id) => {
-  if (!window.confirm("Are you sure you want to delete this appointment?")) return;
+    if (!window.confirm("Are you sure you want to delete this appointment?")) return;
 
-  try {
-    await axios.delete(`${API_URL}${id}/`, { withCredentials: true });
-    fetchAppointments(); // Refresh the list
-  } catch (err) {
-    setError("Failed to delete appointment.");
-  }
-};
+    try {
+      await axios.delete(`${API_URL}${id}/`, { withCredentials: true });
+      fetchAppointments(); // Refresh the list
+    } catch (err) {
+      setError("Failed to delete appointment.");
+    }
+  };
+
+  const handleEdit = (appointment) => {
+    setEditingId(appointment.id);
+    setFormData({
+      patient_name: appointment.patient_name,
+      doctor_name: appointment.doctor_name,
+      appointment_time: appointment.appointment_time.slice(0, 16),
+      reason: appointment.reason || "",
+      status: appointment.status,
+    });
+    setError("");
+  };
 
   return (
     <div className="container py-4">
@@ -158,10 +178,30 @@ function App() {
                 />
               </div>
 
-              <div className="col-12">
+              <div className="col-12 d-flex gap-2">
                 <button type="submit" className="btn btn-primary">
-                  Create Appointment
+                  {editingId ? "Update Appointment" : "Create Appointment"}
                 </button>
+
+                {editingId && (
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      setEditingId(null);
+                      setFormData({
+                        patient_name: "",
+                        doctor_name: "",
+                        appointment_time: "",
+                        reason: "",
+                        status: "pending",
+                      });
+                      setError("");
+                    }}
+                  >
+                    Cancel
+                  </button>
+                )}
               </div>
             </div>
           </form>
@@ -182,18 +222,31 @@ function App() {
           <div className="col-md-6" key={a.id}>
             <div className="card shadow-sm h-100">
               <div className="card-body">
-                <h3 className="h5 card-title">{a.patient_name}</h3>
+                <div className="d-flex justify-content-between align-items-start mb-2">
+                  <h3 className="h5 card-title mb-0">{a.patient_name}</h3>
+
+                  <div className="d-flex gap-2">
+                    <button
+                      className="btn btn-outline-warning btn-sm"
+                      onClick={() => handleEdit(a)}
+                    >
+                      <FaEdit />
+                    </button>
+
+                    <button
+                      className="btn btn-outline-danger btn-sm"
+                      onClick={() => handleDelete(a.id)}
+                    >
+                      <FaTrash />
+                    </button>
+                  </div>
+                </div>
+
                 <p className="mb-1"><strong>Doctor:</strong> {a.doctor_name}</p>
                 <p className="mb-1"><strong>Time:</strong> {a.appointment_time}</p>
                 <p className="mb-1"><strong>Status:</strong> {a.status}</p>
-                <p className="mb-1"><strong>Reason:</strong> {a.reason || ""}</p>
+                <p className="mb-1"><strong>Reason:</strong> {a.reason || "N/A"}</p>
                 <p className="mb-0"><strong>Created By:</strong> {a.created_by_name || "Unknown"}</p>
-                <button
-                  className="btn btn-danger btn-sm"
-                  onClick={() => handleDelete(a.id)}
-                >
-                  Delete
-                </button>
               </div>
             </div>
           </div>
