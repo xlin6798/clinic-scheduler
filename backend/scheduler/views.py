@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from django.contrib.auth.models import User
+from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 
@@ -23,7 +25,20 @@ from .serializers import (
 )
 
 
-def get_active_membership(user):
+def get_request_user(request):
+    if request.user.is_authenticated:
+        return request.user
+
+    if getattr(settings, "DEMO_MODE", False):
+        return User.objects.filter(username="admin").first()
+
+    return None
+
+
+def get_active_membership_for_user(user):
+    if not user:
+        return None
+
     return FacilityMembership.objects.filter(
         user=user,
         is_active=True
@@ -33,11 +48,15 @@ def get_active_membership(user):
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class AppointmentListCreateView(generics.ListCreateAPIView):
     serializer_class = AppointmentSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
+        user = get_request_user(self.request)
+        if not user:
+            return Appointment.objects.none()
+
         memberships = FacilityMembership.objects.filter(
-            user=self.request.user,
+            user=user,
             is_active=True
         ).values_list("facility_id", flat=True)
 
@@ -61,11 +80,15 @@ class AppointmentListCreateView(generics.ListCreateAPIView):
         return queryset
 
     def perform_create(self, serializer):
+        user = get_request_user(self.request)
+        if not user:
+            raise PermissionDenied("Authentication required.")
+
         facility = serializer.validated_data.get("facility")
         status = serializer.validated_data.get("status")
         appointment_type = serializer.validated_data.get("appointment_type")
 
-        membership = get_active_membership(self.request.user)
+        membership = get_active_membership_for_user(user)
 
         if not membership or membership.facility_id != facility.id:
             raise PermissionDenied("You do not have access to this facility.")
@@ -76,16 +99,20 @@ class AppointmentListCreateView(generics.ListCreateAPIView):
         if appointment_type.facility_id != facility.id:
             raise PermissionDenied("Selected appointment type does not belong to this facility.")
 
-        serializer.save(created_by=self.request.user)
+        serializer.save(created_by=user)
 
 
 class AppointmentDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AppointmentSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
+        user = get_request_user(self.request)
+        if not user:
+            return Appointment.objects.none()
+
         memberships = FacilityMembership.objects.filter(
-            user=self.request.user,
+            user=user,
             is_active=True
         ).values_list("facility_id", flat=True)
 
@@ -98,11 +125,15 @@ class AppointmentDetailView(generics.RetrieveUpdateDestroyAPIView):
         )
 
     def perform_update(self, serializer):
+        user = get_request_user(self.request)
+        if not user:
+            raise PermissionDenied("Authentication required.")
+
         facility = serializer.validated_data.get("facility", serializer.instance.facility)
         status = serializer.validated_data.get("status", serializer.instance.status)
         appointment_type = serializer.validated_data.get("appointment_type", serializer.instance.appointment_type)
 
-        membership = get_active_membership(self.request.user)
+        membership = get_active_membership_for_user(user)
 
         if not membership or membership.facility_id != facility.id:
             raise PermissionDenied("You do not have access to this facility.")
@@ -117,14 +148,18 @@ class AppointmentDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class CurrentUserView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        membership = get_active_membership(request.user)
+        user = get_request_user(request)
+        if not user:
+            return Response({"detail": "Authentication credentials were not provided."}, status=403)
+
+        membership = get_active_membership_for_user(user)
 
         data = {
-            "id": request.user.id,
-            "username": request.user.username,
+            "id": user.id,
+            "username": user.username,
             "role": membership.role if membership else None,
             "facility": {
                 "id": membership.facility.id,
@@ -137,10 +172,11 @@ class CurrentUserView(APIView):
 
 
 class AppointmentStatusListView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        membership = get_active_membership(request.user)
+        user = get_request_user(request)
+        membership = get_active_membership_for_user(user)
 
         if not membership:
             return Response([])
@@ -155,10 +191,11 @@ class AppointmentStatusListView(APIView):
 
 
 class AppointmentTypeListView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        membership = get_active_membership(request.user)
+        user = get_request_user(request)
+        membership = get_active_membership_for_user(user)
 
         if not membership:
             return Response([])
@@ -173,10 +210,11 @@ class AppointmentTypeListView(APIView):
 
 
 class PhysicianListView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        membership = get_active_membership(request.user)
+        user = get_request_user(request)
+        membership = get_active_membership_for_user(user)
 
         if not membership:
             return Response([])
