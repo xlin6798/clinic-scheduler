@@ -1,6 +1,5 @@
 import "./App.css";
 import { useEffect, useState } from "react";
-import axios from "axios";
 import SchedulerDayView from "./components/SchedulerDayView";
 import AppointmentFormModal from "./components/AppointmentFormModal";
 import {
@@ -9,13 +8,18 @@ import {
   extractStoredTime,
 } from "./utils/dateTime";
 
-axios.defaults.xsrfCookieName = "csrftoken";
-axios.defaults.xsrfHeaderName = "X-CSRFToken";
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
-
-const API_URL = `${API_BASE_URL}/api/appointments/`;
+import {
+  fetchAppointments,
+  createAppointment,
+  updateAppointment,
+  deleteAppointment,
+} from "./api/scheduler";
+import {
+  fetchCurrentUser,
+  fetchPhysicians,
+  fetchAppointmentStatuses,
+  fetchAppointmentTypes,
+} from "./api/facilities";
 
 const emptyForm = {
   patient_name: "",
@@ -46,69 +50,58 @@ function App() {
 
   const [draggedAppointment, setDraggedAppointment] = useState(null);
 
-  const fetchUser = async () => {
-    try {
-      const res = await axios.get(`${API_BASE_URL}/api/me/`, {
-        withCredentials: true,
-      });
+  const token = localStorage.getItem("accessToken");
 
-      setFacility(res.data.facility || null);
-      setRole(res.data.role || null);
+  const loadUser = async () => {
+    try {
+      const data = await fetchCurrentUser(token);
+      setFacility(data.facility || null);
+      setRole(data.role || null);
       setError("");
     } catch (err) {
-      console.error(err.response?.data || err);
+      console.error(err);
       setError("Failed to load user info.");
     }
   };
 
-  const fetchPhysicians = async () => {
+  const loadPhysicians = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/physicians/`, {
-        withCredentials: true,
-      });
-      setPhysicians(res.data);
+      const data = await fetchPhysicians(token);
+      setPhysicians(data);
     } catch (err) {
-      console.error(err.response?.data || err);
+      console.error(err);
       setError("Failed to load physicians.");
     }
   };
 
-  const fetchStatusOptions = async () => {
+  const loadStatusOptions = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/appointment-statuses/`, {
-        withCredentials: true,
-      });
-      setStatusOptions(res.data);
+      const data = await fetchAppointmentStatuses(token);
+      setStatusOptions(data);
     } catch (err) {
-      console.error(err.response?.data || err);
+      console.error(err);
       setError("Failed to load appointment statuses.");
     }
   };
 
-  const fetchTypeOptions = async () => {
+  const loadTypeOptions = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/appointment-types/`, {
-        withCredentials: true,
-      });
-      setTypeOptions(res.data);
+      const data = await fetchAppointmentTypes(token);
+      setTypeOptions(data);
     } catch (err) {
-      console.error(err.response?.data || err);
+      console.error(err);
       setError("Failed to load appointment types.");
     }
   };
 
-  const fetchAppointments = async (date = selectedDate, silent = false) => {
+  const loadAppointments = async (date = selectedDate, silent = false) => {
     try {
       if (!silent) setLoading(true);
-
-      const res = await axios.get(`${API_URL}?date=${date}`, {
-        withCredentials: true,
-      });
-
-      setAppointments(res.data);
+      const data = await fetchAppointments({ date, token });
+      setAppointments(data);
       setError("");
     } catch (err) {
-      console.error(err.response?.data || err);
+      console.error(err);
       setError("Failed to load appointments.");
     } finally {
       setLoading(false);
@@ -116,20 +109,20 @@ function App() {
   };
 
   useEffect(() => {
-    fetchUser();
+    loadUser();
   }, []);
 
   useEffect(() => {
     if (facility) {
-      fetchPhysicians();
-      fetchStatusOptions();
-      fetchTypeOptions();
+      loadPhysicians();
+      loadStatusOptions();
+      loadTypeOptions();
     }
   }, [facility]);
 
   useEffect(() => {
     if (facility) {
-      fetchAppointments(selectedDate, false);
+      loadAppointments(selectedDate, false);
     }
   }, [selectedDate, facility]);
 
@@ -205,19 +198,15 @@ function App() {
 
     try {
       if (editingId) {
-        await axios.put(`${API_URL}${editingId}/`, payload, {
-          withCredentials: true,
-        });
+        await updateAppointment(editingId, payload, token);
       } else {
-        await axios.post(API_URL, payload, {
-          withCredentials: true,
-        });
+        await createAppointment(payload, token);
       }
 
-      await fetchAppointments(selectedDate, true);
+      await loadAppointments(selectedDate, true);
       closeModal();
     } catch (err) {
-      console.error(err.response?.data || err);
+      console.error(err);
       setError("Failed to save appointment.");
     }
   };
@@ -230,13 +219,11 @@ function App() {
     }
 
     try {
-      await axios.delete(`${API_URL}${editingId}/`, {
-        withCredentials: true,
-      });
-      await fetchAppointments(selectedDate, true);
+      await deleteAppointment(editingId, token);
+      await loadAppointments(selectedDate, true);
       closeModal();
     } catch (err) {
-      console.error(err.response?.data || err);
+      console.error(err);
       setError("Failed to delete appointment.");
     }
   };
@@ -259,14 +246,11 @@ function App() {
     };
 
     try {
-      await axios.put(`${API_URL}${draggedAppointment.id}/`, payload, {
-        withCredentials: true,
-      });
-
+      await updateAppointment(draggedAppointment.id, payload, token);
       setDraggedAppointment(null);
-      await fetchAppointments(selectedDate, true);
+      await loadAppointments(selectedDate, true);
     } catch (err) {
-      console.error(err.response?.data || err);
+      console.error(err);
       setError("Failed to move appointment.");
     }
   };
@@ -293,16 +277,22 @@ function App() {
   }));
 
   return (
-    <div className="container py-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
+    <div className="mx-auto max-w-7xl px-4 py-6">
+      <div className="mb-6 flex items-center justify-between gap-4">
         <div>
-          <h1 className="mb-0">{facility?.name || "Facility Scheduler"}</h1>
-          {role && <small className="text-muted">Role: {role}</small>}
+          <h1 className="text-3xl font-semibold text-slate-900">
+            {facility?.name || "Facility Scheduler"}
+          </h1>
+          {role && (
+            <p className="mt-1 text-sm text-slate-500">
+              Role: {role}
+            </p>
+          )}
         </div>
 
         <button
           type="button"
-          className="btn btn-primary"
+          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           onClick={openCreateModal}
           disabled={!facility}
         >
@@ -310,9 +300,14 @@ function App() {
         </button>
       </div>
 
-      {loading && appointments.length === 0 && <p>Loading appointments...</p>}
+      {loading && appointments.length === 0 && (
+        <p className="text-sm text-slate-600">Loading appointments...</p>
+      )}
+
       {error && !isModalOpen && (
-        <div className="alert alert-danger">{error}</div>
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
       )}
 
       {(appointments.length > 0 || !loading) && (

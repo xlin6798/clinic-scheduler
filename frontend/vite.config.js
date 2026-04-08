@@ -1,18 +1,12 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   server: {
-    proxy: {
-      "/api": {
-        target: "http://localhost:8000",
-        changeOrigin: true,
-      },
-      "/admin": {
-        target: "http://localhost:8000",
-        changeOrigin: true,
-      },
-    },
+    host: "localhost",   // ensures consistent origin
+    port: 5173,          // force port
+    strictPort: true,    // 🔥 prevents auto-switch to 5174+
   },
 });

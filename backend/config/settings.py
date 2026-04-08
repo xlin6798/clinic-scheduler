@@ -4,18 +4,20 @@ import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# --- ENV FLAGS ---
 DEMO_MODE = os.environ.get("DEMO_MODE", "False") == "True"
-
-SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key")
 DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
 IS_PRODUCTION = not DEBUG
 
+SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key")
+
+# --- HOSTS ---
 ALLOWED_HOSTS = [
     "localhost",
-    "127.0.0.1",
     ".onrender.com",
 ]
 
+# --- APPS ---
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -23,23 +25,28 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
     "rest_framework",
     "rest_framework_simplejwt",
     "corsheaders",
     "colorfield",
+
     "scheduler",
     "accounts",
     "facilities",
     "patients",
 ]
 
+# --- MIDDLEWARE ---
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",  # MUST BE FIRST
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
+
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
+
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -47,6 +54,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "config.urls"
 
+# --- TEMPLATES ---
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -65,6 +73,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
+# --- DATABASE ---
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if DATABASE_URL:
@@ -83,41 +92,39 @@ else:
         }
     }
 
+# --- AUTH ---
 AUTH_USER_MODEL = "accounts.User"
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+# --- I18N ---
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
+# --- STATIC FILES ---
 STATIC_URL = "static/"
 
 if not DEBUG:
     STATIC_ROOT = BASE_DIR / "staticfiles"
     STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
+# --- DEFAULT PK ---
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# --- CORS (LOCAL + PROD) ---
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "https://clinic-scheduler-seven.vercel.app",
 ]
 
+# allow preview deployments
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https:\/\/clinic-scheduler-.*-xinyiklins-projects\.vercel\.app$",
 ]
@@ -130,12 +137,14 @@ CSRF_TRUSTED_ORIGINS = [
 
 CORS_ALLOW_CREDENTIALS = True
 
+# --- COOKIES ---
 SESSION_COOKIE_SAMESITE = "None" if IS_PRODUCTION else "Lax"
 SESSION_COOKIE_SECURE = IS_PRODUCTION
 
 CSRF_COOKIE_SAMESITE = "None" if IS_PRODUCTION else "Lax"
 CSRF_COOKIE_SECURE = IS_PRODUCTION
 
+# --- DRF ---
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",

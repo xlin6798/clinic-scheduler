@@ -31,23 +31,26 @@ export default function SchedulerDayView({
 
   return (
     <div className="mt-4">
-      <div className="d-flex gap-2 mb-3 align-items-center">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
         <button
-          className="btn btn-outline-secondary"
+          type="button"
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
           onClick={() => changeDay(-1)}
         >
           Prev
         </button>
 
         <button
-          className="btn btn-outline-primary"
+          type="button"
+          className="rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-50"
           onClick={() => onDateChange(getTodayLocal())}
         >
           Today
         </button>
 
         <button
-          className="btn btn-outline-secondary"
+          type="button"
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
           onClick={() => changeDay(1)}
         >
           Next
@@ -55,14 +58,13 @@ export default function SchedulerDayView({
 
         <input
           type="date"
-          className="form-control"
-          style={{ maxWidth: "200px" }}
+          className="w-full max-w-[200px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
           value={selectedDate}
           onChange={(e) => onDateChange(e.target.value)}
         />
       </div>
 
-      <div className="border rounded">
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         {timeSlots.map((slot) => {
           const slotAppointments = appointmentsForDay.filter((a) => {
             const [h, m] = a.time.split(":").map(Number);
@@ -77,19 +79,14 @@ export default function SchedulerDayView({
           return (
             <div
               key={slot.value}
-              className="d-flex border-bottom"
-              style={{ minHeight: "40px" }}
+              className="flex min-h-[40px] border-b border-slate-200 last:border-b-0"
             >
-              <div
-                className="border-end px-2 py-1 bg-light"
-                style={{ width: "100px", flexShrink: 0, userSelect: "none" }}
-              >
+              <div className="w-[100px] shrink-0 select-none border-r border-slate-200 bg-slate-50 px-2 py-2 text-sm text-slate-600">
                 {slot.label}
               </div>
 
               <div
-                className="flex-grow-1 d-flex gap-1 px-2"
-                style={{ cursor: "pointer" }}
+                className="flex flex-1 gap-1 px-2 py-1 cursor-pointer"
                 onDoubleClick={() =>
                   onSlotDoubleClick?.(selectedDate, slot.time24)
                 }
@@ -112,6 +109,6 @@ export default function SchedulerDayView({
           );
         })}
       </div>
-    </div >
+    </div>
   );
 }
