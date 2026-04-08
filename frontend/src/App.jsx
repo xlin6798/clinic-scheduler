@@ -2,6 +2,8 @@ import "./App.css";
 import { useEffect, useState } from "react";
 import SchedulerDayView from "./components/SchedulerDayView";
 import AppointmentFormModal from "./components/AppointmentFormModal";
+import LoginForm from "./components/LoginForm";
+
 import {
   getTodayLocal,
   extractStoredDate,
@@ -51,6 +53,24 @@ function App() {
   const [draggedAppointment, setDraggedAppointment] = useState(null);
 
   const token = localStorage.getItem("accessToken");
+
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    !!localStorage.getItem("accessToken")
+  );
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState("");
+
+  const handleLoginSubmit = async (credentials) => {
+    setAuthLoading(true);
+    setAuthError("");
+
+    console.log("Login form submitted:", credentials);
+
+    setTimeout(() => {
+      setAuthLoading(false);
+      setAuthError("Login API not connected yet.");
+    }, 500);
+  };
 
   const loadUser = async () => {
     try {
@@ -275,6 +295,16 @@ function App() {
     time: extractStoredTime(appointment.appointment_time),
     onEdit: () => openEditModal(appointment),
   }));
+
+  if (!isAuthenticated) {
+    return (
+      <LoginForm
+        onSubmit={handleLoginSubmit}
+        error={authError}
+        loading={authLoading}
+      />
+    );
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
