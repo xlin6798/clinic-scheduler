@@ -4,6 +4,9 @@ import { login } from "./api/accounts";
 import SchedulerDayView from "./components/SchedulerDayView";
 import AppointmentFormModal from "./components/AppointmentFormModal";
 import LoginForm from "./components/LoginForm";
+import PatientSearchModal from "./components/PatientSearchModal";
+import PatientDetailModal from "./components/PatientDetailModal";
+
 
 import {
   getTodayLocal,
@@ -17,15 +20,17 @@ import {
   updateAppointment,
   deleteAppointment,
 } from "./api/scheduler";
+
 import {
   fetchCurrentUser,
   fetchPhysicians,
   fetchAppointmentStatuses,
   fetchAppointmentTypes,
+  fetchPatientGenders,
 } from "./api/facilities";
 
 const emptyForm = {
-  patient_name: "",
+  patient: "",
   doctor_name: "",
   appointment_time: "",
   reason: "",
@@ -51,9 +56,17 @@ function App() {
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState(emptyForm);
 
-  const [draggedAppointment, setDraggedAppointment] = useState(null);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [isPatientSearchOpen, setIsPatientSearchOpen] = useState(false);
+  const [patientSearchRefreshKey, setPatientSearchRefreshKey] = useState(0);
+  const [patientSearchInjectedPatient, setPatientSearchInjectedPatient] = useState(null);
 
-  const token = localStorage.getItem("accessToken");
+  const [isPatientDetailOpen, setIsPatientDetailOpen] = useState(false);
+  const [patientDetailMode, setPatientDetailMode] = useState("create");
+  const [activePatient, setActivePatient] = useState(null);
+  const [genderOptions, setGenderOptions] = useState([]);
+
+  const [draggedAppointment, setDraggedAppointment] = useState(null);
 
   const [isAuthenticated, setIsAuthenticated] = useState(
     !!localStorage.getItem("accessToken")
@@ -80,9 +93,36 @@ function App() {
     }
   };
 
+  const loadGenderOptions = async () => {
+    try {
+      const data = await fetchPatientGenders();
+      setGenderOptions(data);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load patient genders.");
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    setIsAuthenticated(false);
+    setFacility(null);
+    setRole(null);
+    setAppointments([]);
+    setPhysicians([]);
+    setStatusOptions([]);
+    setTypeOptions([]);
+    setSelectedPatient(null);
+    setIsModalOpen(false);
+    setEditingId(null);
+    setFormData(emptyForm);
+    setError("");
+  };
+
   const loadUser = async () => {
     try {
-      const data = await fetchCurrentUser(token);
+      const data = await fetchCurrentUser();
       setFacility(data.facility || null);
       setRole(data.role || null);
       setError("");
@@ -94,7 +134,7 @@ function App() {
 
   const loadPhysicians = async () => {
     try {
-      const data = await fetchPhysicians(token);
+      const data = await fetchPhysicians();
       setPhysicians(data);
     } catch (err) {
       console.error(err);
@@ -104,7 +144,7 @@ function App() {
 
   const loadStatusOptions = async () => {
     try {
-      const data = await fetchAppointmentStatuses(token);
+      const data = await fetchAppointmentStatuses();
       setStatusOptions(data);
     } catch (err) {
       console.error(err);
@@ -114,7 +154,7 @@ function App() {
 
   const loadTypeOptions = async () => {
     try {
-      const data = await fetchAppointmentTypes(token);
+      const data = await fetchAppointmentTypes();
       setTypeOptions(data);
     } catch (err) {
       console.error(err);
@@ -125,7 +165,7 @@ function App() {
   const loadAppointments = async (date = selectedDate, silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const data = await fetchAppointments({ date, token });
+      const data = await fetchAppointments({ date });
       setAppointments(data);
       setError("");
     } catch (err) {
@@ -147,6 +187,7 @@ function App() {
       loadPhysicians();
       loadStatusOptions();
       loadTypeOptions();
+      loadGenderOptions();
     }
   }, [isAuthenticated, facility]);
 
@@ -158,6 +199,7 @@ function App() {
 
   const openCreateModal = () => {
     setEditingId(null);
+    setSelectedPatient(null);
     setFormData({
       ...emptyForm,
       facility: facility?.id || "",
@@ -172,8 +214,17 @@ function App() {
 
   const openEditModal = (appointment) => {
     setEditingId(appointment.id);
+
+    setSelectedPatient({
+      id: appointment.patient_id,
+      full_name: appointment.patient_name,
+      display_name: appointment.patient_name,
+      date_of_birth: appointment.patient_date_of_birth || "",
+      chart_number: appointment.patient_chart_number || "",
+    });
+
     setFormData({
-      patient_name: appointment.patient_name,
+      patient: appointment.patient_id,
       doctor_name: appointment.doctor_name,
       appointment_time: appointment.appointment_time.slice(0, 16),
       reason: appointment.reason || "",
@@ -181,12 +232,14 @@ function App() {
       appointment_type: appointment.appointment_type,
       facility: appointment.facility,
     });
+
     setError("");
     setIsModalOpen(true);
   };
 
   const handleSlotDoubleClick = (date, time24) => {
     setEditingId(null);
+    setSelectedPatient(null);
     setFormData({
       ...emptyForm,
       facility: facility?.id || "",
@@ -203,34 +256,26 @@ function App() {
     setIsModalOpen(false);
     setEditingId(null);
     setFormData(emptyForm);
+    setSelectedPatient(null);
     setError("");
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const handleSubmit = async (submittedData) => {
     const payload = {
-      ...formData,
-      status: formData.status ? Number(formData.status) : "",
-      appointment_type: formData.appointment_type
-        ? Number(formData.appointment_type)
+      ...submittedData,
+      patient: selectedPatient?.id || "",
+      status: submittedData.status ? Number(submittedData.status) : "",
+      appointment_type: submittedData.appointment_type
+        ? Number(submittedData.appointment_type)
         : "",
-      facility: formData.facility ? Number(formData.facility) : "",
+      facility: submittedData.facility ? Number(submittedData.facility) : "",
     };
 
     try {
       if (editingId) {
-        await updateAppointment(editingId, payload, token);
+        await updateAppointment(editingId, payload);
       } else {
-        await createAppointment(payload, token);
+        await createAppointment(payload);
       }
 
       await loadAppointments(selectedDate, true);
@@ -249,7 +294,7 @@ function App() {
     }
 
     try {
-      await deleteAppointment(editingId, token);
+      await deleteAppointment(editingId);
       await loadAppointments(selectedDate, true);
       closeModal();
     } catch (err) {
@@ -266,7 +311,7 @@ function App() {
     if (!draggedAppointment) return;
 
     const payload = {
-      patient_name: draggedAppointment.patient_name,
+      patient: draggedAppointment.patient_id,
       doctor_name: draggedAppointment.doctor_name,
       appointment_time: `${date}T${time24}`,
       reason: draggedAppointment.reason || "",
@@ -276,7 +321,7 @@ function App() {
     };
 
     try {
-      await updateAppointment(draggedAppointment.id, payload, token);
+      await updateAppointment(draggedAppointment.id, payload);
       setDraggedAppointment(null);
       await loadAppointments(selectedDate, true);
     } catch (err) {
@@ -287,7 +332,10 @@ function App() {
 
   const formattedAppointments = appointments.map((appointment) => ({
     id: appointment.id,
+    patient_id: appointment.patient_id,
     patient_name: appointment.patient_name,
+    patient_date_of_birth: appointment.patient_date_of_birth,
+    patient_chart_number: appointment.patient_chart_number,
     doctor_name: appointment.doctor_name,
     reason: appointment.reason,
     status: appointment.status,
@@ -323,11 +371,7 @@ function App() {
           <h1 className="text-3xl font-semibold text-slate-900">
             {facility?.name || "Facility Scheduler"}
           </h1>
-          {role && (
-            <p className="mt-1 text-sm text-slate-500">
-              Role: {role}
-            </p>
-          )}
+          {role && <p className="mt-1 text-sm text-slate-500">Role: {role}</p>}
         </div>
 
         <div className="flex items-center gap-3 self-start sm:self-auto">
@@ -342,11 +386,7 @@ function App() {
 
           <button
             type="button"
-            onClick={() => {
-              localStorage.removeItem("accessToken");
-              localStorage.removeItem("refreshToken");
-              setIsAuthenticated(false);
-            }}
+            onClick={handleLogout}
             className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
           >
             Logout
@@ -359,7 +399,6 @@ function App() {
           {error}
         </div>
       )}
-
 
       {(appointments.length > 0 || !loading) && (
         <SchedulerDayView
@@ -381,10 +420,53 @@ function App() {
         statusOptions={statusOptions}
         typeOptions={typeOptions}
         error={error}
-        onChange={handleChange}
         onSubmit={handleSubmit}
         onClose={closeModal}
         onDelete={handleModalDelete}
+        selectedPatient={selectedPatient}
+        onSelectPatient={setSelectedPatient}
+        onOpenDetailedSearch={() => setIsPatientSearchOpen(true)}
+        onOpenCreatePatient={() => {
+          setPatientDetailMode("create");
+          setActivePatient(null);
+          setIsPatientDetailOpen(true);
+        }} />
+
+      <PatientSearchModal
+        isOpen={isPatientSearchOpen}
+        onClose={() => setIsPatientSearchOpen(false)}
+        onSelectPatient={(patient) => {
+          setSelectedPatient(patient);
+          setIsPatientSearchOpen(false);
+        }}
+        onOpenCreatePatient={() => {
+          setPatientDetailMode("create");
+          setActivePatient(null);
+          setIsPatientDetailOpen(true);
+        }}
+        onOpenPatientProfile={(patient) => {
+          setPatientDetailMode("edit");
+          setActivePatient(patient);
+          setIsPatientDetailOpen(true);
+        }}
+        allowSelect={!editingId}
+        refreshKey={patientSearchRefreshKey}
+        injectedPatient={patientSearchInjectedPatient}
+      />
+
+      <PatientDetailModal
+        isOpen={isPatientDetailOpen}
+        mode={patientDetailMode}
+        patient={activePatient}
+        genderOptions={genderOptions}
+        onClose={() => setIsPatientDetailOpen(false)}
+        onSaved={(savedPatient) => {
+          setActivePatient(savedPatient);
+          setSelectedPatient(savedPatient);
+          setPatientSearchInjectedPatient(savedPatient);
+          setPatientSearchRefreshKey((prev) => prev + 1);
+          setIsPatientDetailOpen(false);
+        }}
       />
     </div>
   );

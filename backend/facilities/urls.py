@@ -4,6 +4,8 @@ from .views import (
     PhysicianListView,
     AppointmentStatusListView,
     AppointmentTypeListView,
+    PatientGendersView,
+
 )
 
 urlpatterns = [
@@ -14,7 +16,5 @@ urlpatterns = [
     # Configuration endpoints (Specific to the Facility)
     path("appointment-statuses/", AppointmentStatusListView.as_view(), name="appointment-status-list"),
     path("appointment-types/", AppointmentTypeListView.as_view(), name="appointment-type-list"),
-    
-    # Optional: If you want the frontend to see the list of roles/titles available
-    # path("roles/", StaffRoleListView.as_view(), name="role-list"),
+    path("patient-genders/", PatientGendersView.as_view(), name="patient-gender-list"),
 ]

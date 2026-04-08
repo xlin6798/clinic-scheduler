@@ -38,6 +38,12 @@ DEFAULT_TITLES = [
     ("rn", "RN"),
 ]
 
+DEFAULT_PATIENT_GENDERS = [
+    {"code": "male", "name": "Male", "sort_order": 1},
+    {"code": "female", "name": "Female", "sort_order": 2},
+    {"code": "other", "name": "Other", "sort_order": 3},
+    {"code": "unknown", "name": "Unknown", "sort_order": 4},
+]
 
 # --- 2. FACILITY MODEL ---
 
@@ -201,3 +207,21 @@ class Staff(models.Model):
     def __str__(self):
         name = self.user.get_full_name() or self.user.username
         return f"{name} ({self.role.name}) - {self.facility.name}"
+    
+class PatientGender(models.Model):
+    facility = models.ForeignKey(
+        Facility,
+        on_delete=models.CASCADE,
+        related_name="patient_genders",
+    )
+    code = models.CharField(max_length=20)
+    name = models.CharField(max_length=50)
+    is_active = models.BooleanField(default=True)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = ("facility", "code")
+        ordering = ["sort_order", "name"]
+
+    def __str__(self):
+        return f"{self.name} ({self.facility.name})"

@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.exceptions import PermissionDenied
 
 from .models import (
     Staff,
@@ -20,9 +21,6 @@ from .serializers import (
 
 
 def get_request_user(request):
-    """
-    Handles authentication check and provides a fallback for Demo Mode.
-    """
     if request.user.is_authenticated:
         return request.user
 
@@ -34,9 +32,6 @@ def get_request_user(request):
 
 
 def get_active_staff_profile(user):
-    """
-    Retrieves the user's active facility profile (Staff record).
-    """
     if not user:
         return None
 
@@ -111,9 +106,6 @@ class PhysicianListView(APIView):
 
 
 class AppointmentStatusListView(generics.ListAPIView):
-    """
-    Lists all active appointment statuses for the user's facility.
-    """
     serializer_class = AppointmentStatusSerializer
     permission_classes = [permissions.AllowAny]
 
@@ -131,9 +123,6 @@ class AppointmentStatusListView(generics.ListAPIView):
 
 
 class AppointmentTypeListView(generics.ListAPIView):
-    """
-    Lists all active appointment types for the user's facility.
-    """
     serializer_class = AppointmentTypeSerializer
     permission_classes = [permissions.AllowAny]
 
@@ -171,9 +160,6 @@ class StaffRoleListView(generics.ListAPIView):
 
 
 class StaffTitleListView(generics.ListAPIView):
-    """
-    Lists available active titles for the current facility.
-    """
     serializer_class = StaffTitleSerializer
     permission_classes = [permissions.AllowAny]
 
@@ -188,3 +174,24 @@ class StaffTitleListView(generics.ListAPIView):
             facility=profile.facility,
             is_active=True,
         ).order_by("id")
+    
+class PatientGendersView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        user = get_request_user(request)
+        profile = get_active_staff_profile(user)
+
+        if not profile:
+            raise PermissionDenied("Authentication required.")
+
+        genders = profile.facility.patient_genders.filter(is_active=True)
+
+        return Response([
+            {
+                "id": gender.id,
+                "code": gender.code,
+                "name": gender.name,
+            }
+            for gender in genders
+        ])

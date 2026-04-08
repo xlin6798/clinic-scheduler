@@ -1,6 +1,9 @@
 import { useMemo } from "react";
 import { generateTimeSlots } from "../utils/timeSlots";
 import { getTodayLocal, parseLocalDate } from "../utils/dateTime";
+import dayjs from "dayjs";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import TextField from "@mui/material/TextField";
 import AppointmentBlock from "./AppointmentBlock";
 
 export default function SchedulerDayView({
@@ -56,11 +59,19 @@ export default function SchedulerDayView({
           Next
         </button>
 
-        <input
-          type="date"
-          className="w-full max-w-[200px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-          value={selectedDate}
-          onChange={(e) => onDateChange(e.target.value)}
+        <DatePicker
+          value={selectedDate ? dayjs(selectedDate) : null}
+          onChange={(newValue) => {
+            if (newValue && newValue.isValid()) {
+              onDateChange(newValue.format("YYYY-MM-DD"));
+            }
+          }}
+          slotProps={{
+            textField: {
+              size: "small",
+              sx: { width: 150 },
+            },
+          }}
         />
       </div>
 

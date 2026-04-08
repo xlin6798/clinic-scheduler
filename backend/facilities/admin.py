@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Facility, Staff, StaffRole, StaffTitle, AppointmentStatus, AppointmentType
+from .models import Facility, Staff, StaffRole, StaffTitle, AppointmentStatus, AppointmentType, PatientGender
 
 
 class StaffInline(admin.TabularInline):
@@ -54,3 +54,11 @@ class AppointmentTypeAdmin(admin.ModelAdmin):
     list_display = ("name", "code", "facility", "color", "is_active")
     list_filter = ("facility", "is_active")
     search_fields = ("name", "code")
+
+    
+@admin.register(PatientGender)
+class PatientGenderAdmin(admin.ModelAdmin):
+    list_display = ("name", "code", "facility", "is_active", "sort_order")
+    list_filter = ("facility", "is_active")
+    search_fields = ("name", "code", "facility__name")
+    ordering = ("facility", "sort_order", "name")

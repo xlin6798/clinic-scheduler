@@ -3,6 +3,11 @@ from .models import Appointment
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
+    patient_name = serializers.SerializerMethodField()
+    patient_id = serializers.IntegerField(source="patient.id", read_only=True)
+    patient_date_of_birth = serializers.DateField(source="patient.date_of_birth", read_only=True)
+    patient_chart_number = serializers.CharField(source="patient.chart_number", read_only=True)
+
     status_name = serializers.CharField(source="status.name", read_only=True)
     status_code = serializers.CharField(source="status.code", read_only=True)
     status_color = serializers.CharField(source="status.color", read_only=True)
@@ -15,7 +20,11 @@ class AppointmentSerializer(serializers.ModelSerializer):
         model = Appointment
         fields = [
             "id",
+            "patient",
+            "patient_id",
             "patient_name",
+            "patient_date_of_birth",
+            "patient_chart_number",
             "doctor_name",
             "appointment_time",
             "reason",
@@ -33,3 +42,6 @@ class AppointmentSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = ("created_by", "created_by_name", "created_at")
+
+    def get_patient_name(self, obj):
+        return f"{obj.patient.last_name}, {obj.patient.first_name}"

@@ -1,4 +1,4 @@
-import { apiRequest } from "./client";
+import { apiRequest, getAuthHeaders } from "./client";
 
 export function login(credentials) {
   return apiRequest("/api/accounts/token/", {
@@ -21,8 +21,10 @@ export function registerUser(data) {
   });
 }
 
-export function fetchMyProfile(token) {
+export function fetchMyProfile() {
   return apiRequest("/api/accounts/me/", {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    headers: {
+      ...getAuthHeaders(),
+    },
   });
 }

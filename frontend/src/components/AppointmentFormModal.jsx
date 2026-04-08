@@ -1,3 +1,9 @@
+import { useEffect } from "react";
+import dayjs from "dayjs";
+import { useForm, Controller } from "react-hook-form";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import PatientSearchField from "./PatientSearchField";
+
 export default function AppointmentFormModal({
   isOpen,
   mode,
@@ -6,12 +12,70 @@ export default function AppointmentFormModal({
   statusOptions,
   typeOptions,
   error,
-  onChange,
   onSubmit,
   onClose,
   onDelete,
+  selectedPatient,
+  onSelectPatient,
+  onOpenDetailedSearch,
+  onOpenCreatePatient,
 }) {
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    setValue,
+    clearErrors,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      patient: "",
+      doctor_name: "",
+      appointment_time: null,
+      reason: "",
+      status: "",
+      appointment_type: "",
+      facility: "",
+    },
+  });
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    reset({
+      patient: selectedPatient?.id || formData.patient || "",
+      doctor_name: formData.doctor_name || "",
+      appointment_time: formData.appointment_time
+        ? dayjs(formData.appointment_time)
+        : null,
+      reason: formData.reason || "",
+      status: formData.status || "",
+      appointment_type: formData.appointment_type || "",
+      facility: formData.facility || "",
+    });
+  }, [isOpen, formData, selectedPatient, reset]);
+
+  useEffect(() => {
+    const patientId = selectedPatient?.id || formData.patient || "";
+    setValue("patient", patientId);
+
+    if (patientId) {
+      clearErrors("patient");
+    }
+  }, [selectedPatient, formData.patient, setValue, clearErrors]);
+
   if (!isOpen) return null;
+
+  const submitForm = (data) => {
+    onSubmit({
+      ...data,
+      patient: selectedPatient?.id || formData.patient || "",
+      appointment_time: data.appointment_time
+        ? data.appointment_time.format("YYYY-MM-DDTHH:mm")
+        : "",
+    });
+  };
 
   return (
     <div
@@ -22,7 +86,7 @@ export default function AppointmentFormModal({
         className="w-full max-w-lg rounded-2xl bg-white shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <form onSubmit={onSubmit}>
+        <form onSubmit={handleSubmit(submitForm)}>
           <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
             <h2 className="text-lg font-semibold text-slate-900">
               {mode === "edit" ? "Edit Appointment" : "Create Appointment"}
@@ -45,18 +109,48 @@ export default function AppointmentFormModal({
               </div>
             )}
 
+            <input type="hidden" {...register("facility")} />
+            <input
+              type="hidden"
+              {...register("patient", { required: "Patient is required." })}
+            />
+
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">
-                Patient Name
+                Patient
               </label>
-              <input
-                type="text"
-                name="patient_name"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                value={formData.patient_name}
-                onChange={onChange}
-                required
-              />
+
+              {mode === "edit" ? (
+                <div className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-2">
+                  <p className="text-sm font-medium text-slate-900">
+                    {selectedPatient?.display_name ||
+                      selectedPatient?.full_name ||
+                      "No patient"}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {selectedPatient?.date_of_birth
+                      ? `DOB: ${selectedPatient.date_of_birth}`
+                      : ""}
+                    {selectedPatient?.chart_number
+                      ? ` • MRN: ${selectedPatient.chart_number}`
+                      : ""}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <PatientSearchField
+                    selectedPatient={selectedPatient}
+                    onSelectPatient={onSelectPatient}
+                    onOpenDetailedSearch={onOpenDetailedSearch}
+                    onOpenCreatePatient={onOpenCreatePatient}
+                  />
+                  {errors.patient && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.patient.message}
+                    </p>
+                  )}
+                </>
+              )}
             </div>
 
             <div>
@@ -64,11 +158,10 @@ export default function AppointmentFormModal({
                 Physician
               </label>
               <select
-                name="doctor_name"
                 className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                value={formData.doctor_name}
-                onChange={onChange}
-                required
+                {...register("doctor_name", {
+                  required: "Physician is required.",
+                })}
               >
                 <option value="">Select a physician</option>
                 {physicians.map((physician) => (
@@ -79,19 +172,36 @@ export default function AppointmentFormModal({
                   </option>
                 ))}
               </select>
+              {errors.doctor_name && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.doctor_name.message}
+                </p>
+              )}
             </div>
 
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">
                 Appointment Time
               </label>
-              <input
-                type="datetime-local"
+              <Controller
                 name="appointment_time"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                value={formData.appointment_time}
-                onChange={onChange}
-                required
+                control={control}
+                rules={{ required: "Appointment time is required." }}
+                render={({ field }) => (
+                  <DateTimePicker
+                    value={field.value}
+                    onChange={field.onChange}
+                    slotProps={{
+                      textField: {
+                        size: "small",
+                        fullWidth: true,
+                        error: !!errors.appointment_time,
+                        helperText: errors.appointment_time?.message || "",
+                        sx: { width: "100%" },
+                      },
+                    }}
+                  />
+                )}
               />
             </div>
 
@@ -100,11 +210,10 @@ export default function AppointmentFormModal({
                 Visit Type
               </label>
               <select
-                name="appointment_type"
                 className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                value={formData.appointment_type}
-                onChange={onChange}
-                required
+                {...register("appointment_type", {
+                  required: "Visit type is required.",
+                })}
               >
                 <option value="">Select visit type</option>
                 {typeOptions.map((option) => (
@@ -113,6 +222,11 @@ export default function AppointmentFormModal({
                   </option>
                 ))}
               </select>
+              {errors.appointment_type && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.appointment_type.message}
+                </p>
+              )}
             </div>
 
             <div>
@@ -120,11 +234,8 @@ export default function AppointmentFormModal({
                 Status
               </label>
               <select
-                name="status"
                 className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                value={formData.status}
-                onChange={onChange}
-                required
+                {...register("status", { required: "Status is required." })}
               >
                 <option value="">Select status</option>
                 {statusOptions.map((option) => (
@@ -133,6 +244,11 @@ export default function AppointmentFormModal({
                   </option>
                 ))}
               </select>
+              {errors.status && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.status.message}
+                </p>
+              )}
             </div>
 
             <div>
@@ -140,11 +256,9 @@ export default function AppointmentFormModal({
                 Reason
               </label>
               <textarea
-                name="reason"
                 rows="3"
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                value={formData.reason}
-                onChange={onChange}
+                {...register("reason")}
               />
             </div>
           </div>

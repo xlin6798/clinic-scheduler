@@ -1,49 +1,57 @@
 import { apiRequest, getAuthHeaders } from "./client";
 
-export function fetchCurrentUser(token) {
+export function fetchCurrentUser() {
   return apiRequest("/api/facilities/me/", {
     headers: {
-      ...getAuthHeaders(token),
+      ...getAuthHeaders(),
     },
   });
 }
 
-export function fetchPhysicians(token) {
+export function fetchPhysicians() {
   return apiRequest("/api/facilities/physicians/", {
     headers: {
-      ...getAuthHeaders(token),
+      ...getAuthHeaders(),
     },
   });
 }
 
-export function fetchAppointmentStatuses(token) {
+export function fetchAppointmentStatuses() {
   return apiRequest("/api/facilities/appointment-statuses/", {
     headers: {
-      ...getAuthHeaders(token),
+      ...getAuthHeaders(),
     },
   });
 }
 
-export function fetchAppointmentTypes(token) {
+export function fetchAppointmentTypes() {
   return apiRequest("/api/facilities/appointment-types/", {
     headers: {
-      ...getAuthHeaders(token),
+      ...getAuthHeaders(),
     },
   });
 }
 
-export function fetchStaffRoles(token) {
+export function fetchStaffRoles() {
   return apiRequest("/api/facilities/staff-roles/", {
     headers: {
-      ...getAuthHeaders(token),
+      ...getAuthHeaders(),
     },
   });
 }
 
-export function fetchStaffTitles(token) {
+export function fetchStaffTitles() {
   return apiRequest("/api/facilities/staff-titles/", {
     headers: {
-      ...getAuthHeaders(token),
+      ...getAuthHeaders(),
+    },
+  });
+}
+
+export function fetchPatientGenders() {
+  return apiRequest("/api/facilities/patient-genders/", {
+    headers: {
+      ...getAuthHeaders(),
     },
   });
 }

@@ -2,13 +2,6 @@ from django.db import models
 from facilities.models import Facility
 
 class Patient(models.Model):
-    GENDER_CHOICES = [
-        ('M', 'Male'),
-        ('F', 'Female'),
-        ('O', 'Other'),
-        ('U', 'Unknown'),
-    ]
-
     facility = models.ForeignKey(
         Facility, 
         on_delete=models.CASCADE, 
@@ -17,9 +10,12 @@ class Patient(models.Model):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     date_of_birth = models.DateField()
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default='U')
-    
-    # Optional: for internal clinic tracking
+    gender = models.ForeignKey(
+        "facilities.PatientGender",
+        on_delete=models.PROTECT,
+        related_name="patients"
+    )    
+
     chart_number = models.CharField(max_length=50, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

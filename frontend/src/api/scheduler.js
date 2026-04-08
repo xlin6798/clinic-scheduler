@@ -1,39 +1,40 @@
 import { apiRequest, getAuthHeaders } from "./client";
 
-export function fetchAppointments({ date, token }) {
+export function fetchAppointments({ date } = {}) {
   const query = date ? `?date=${encodeURIComponent(date)}` : "";
+
   return apiRequest(`/api/scheduler/appointments/${query}`, {
     headers: {
-      ...getAuthHeaders(token),
+      ...getAuthHeaders(),
     },
   });
 }
 
-export function createAppointment(data, token) {
+export function createAppointment(data) {
   return apiRequest("/api/scheduler/appointments/", {
     method: "POST",
     headers: {
-      ...getAuthHeaders(token),
+      ...getAuthHeaders(),
     },
     body: JSON.stringify(data),
   });
 }
 
-export function updateAppointment(id, data, token) {
+export function updateAppointment(id, data) {
   return apiRequest(`/api/scheduler/appointments/${id}/`, {
     method: "PUT",
     headers: {
-      ...getAuthHeaders(token),
+      ...getAuthHeaders(),
     },
     body: JSON.stringify(data),
   });
 }
 
-export function deleteAppointment(id, token) {
+export function deleteAppointment(id) {
   return apiRequest(`/api/scheduler/appointments/${id}/`, {
     method: "DELETE",
     headers: {
-      ...getAuthHeaders(token),
+      ...getAuthHeaders(),
     },
   });
 }

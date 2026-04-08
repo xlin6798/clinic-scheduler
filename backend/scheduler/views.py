@@ -21,7 +21,7 @@ class AppointmentListCreateView(generics.ListCreateAPIView):
 
         queryset = (
             Appointment.objects.filter(facility=profile.facility)
-            .select_related("status", "appointment_type", "facility")
+            .select_related("patient", "status", "appointment_type", "facility")
             .order_by("appointment_time")
         )
 
@@ -43,11 +43,15 @@ class AppointmentListCreateView(generics.ListCreateAPIView):
             raise PermissionDenied("Authentication required.")
 
         facility = serializer.validated_data.get("facility")
+        patient = serializer.validated_data.get("patient")
         status = serializer.validated_data.get("status")
         appointment_type = serializer.validated_data.get("appointment_type")
 
         if facility.id != profile.facility.id:
             raise PermissionDenied("You do not have access to this facility.")
+
+        if patient.facility_id != facility.id:
+            raise PermissionDenied("Selected patient does not belong to this facility.")
 
         if status.facility_id != facility.id:
             raise PermissionDenied("Selected status does not belong to this facility.")
@@ -69,12 +73,9 @@ class AppointmentDetailView(generics.RetrieveUpdateDestroyAPIView):
         if not profile:
             return Appointment.objects.none()
 
-        return Appointment.objects.filter(
-            facility=profile.facility
-        ).select_related(
-            "status",
-            "appointment_type",
-            "facility",
+        return (
+            Appointment.objects.filter(facility=profile.facility)
+            .select_related("patient", "status", "appointment_type", "facility")
         )
 
     def perform_update(self, serializer):
@@ -85,6 +86,7 @@ class AppointmentDetailView(generics.RetrieveUpdateDestroyAPIView):
             raise PermissionDenied("Authentication required.")
 
         facility = serializer.validated_data.get("facility", serializer.instance.facility)
+        patient = serializer.validated_data.get("patient", serializer.instance.patient)
         status = serializer.validated_data.get("status", serializer.instance.status)
         appointment_type = serializer.validated_data.get(
             "appointment_type",
@@ -93,6 +95,9 @@ class AppointmentDetailView(generics.RetrieveUpdateDestroyAPIView):
 
         if facility.id != profile.facility.id:
             raise PermissionDenied("You do not have access to this facility.")
+
+        if patient.facility_id != facility.id:
+            raise PermissionDenied("Selected patient does not belong to this facility.")
 
         if status.facility_id != facility.id:
             raise PermissionDenied("Selected status does not belong to this facility.")
