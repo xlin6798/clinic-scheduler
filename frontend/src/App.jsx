@@ -1,7 +1,10 @@
 import "./App.css";
 import { useEffect, useState } from "react";
+import { login } from "./api/accounts";
 import SchedulerDayView from "./components/SchedulerDayView";
 import AppointmentFormModal from "./components/AppointmentFormModal";
+import LoginForm from "./components/LoginForm";
+
 import {
   getTodayLocal,
   extractStoredDate,
@@ -51,6 +54,31 @@ function App() {
   const [draggedAppointment, setDraggedAppointment] = useState(null);
 
   const token = localStorage.getItem("accessToken");
+
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    !!localStorage.getItem("accessToken")
+  );
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState("");
+
+  const handleLoginSubmit = async (credentials) => {
+    setAuthLoading(true);
+    setAuthError("");
+
+    try {
+      const data = await login(credentials);
+
+      localStorage.setItem("accessToken", data.access);
+      localStorage.setItem("refreshToken", data.refresh);
+
+      setIsAuthenticated(true);
+    } catch (err) {
+      console.error(err);
+      setAuthError("Invalid username or password.");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
 
   const loadUser = async () => {
     try {
@@ -109,22 +137,24 @@ function App() {
   };
 
   useEffect(() => {
-    loadUser();
-  }, []);
+    if (isAuthenticated) {
+      loadUser();
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    if (facility) {
+    if (isAuthenticated && facility) {
       loadPhysicians();
       loadStatusOptions();
       loadTypeOptions();
     }
-  }, [facility]);
+  }, [isAuthenticated, facility]);
 
   useEffect(() => {
-    if (facility) {
+    if (isAuthenticated && facility) {
       loadAppointments(selectedDate, false);
     }
-  }, [selectedDate, facility]);
+  }, [isAuthenticated, selectedDate, facility]);
 
   const openCreateModal = () => {
     setEditingId(null);
@@ -276,9 +306,19 @@ function App() {
     onEdit: () => openEditModal(appointment),
   }));
 
+  if (!isAuthenticated) {
+    return (
+      <LoginForm
+        onSubmit={handleLoginSubmit}
+        error={authError}
+        loading={authLoading}
+      />
+    );
+  }
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
-      <div className="mb-6 flex items-center justify-between gap-4">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-3xl font-semibold text-slate-900">
             {facility?.name || "Facility Scheduler"}
@@ -290,25 +330,36 @@ function App() {
           )}
         </div>
 
-        <button
-          type="button"
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-          onClick={openCreateModal}
-          disabled={!facility}
-        >
-          Add Appointment
-        </button>
-      </div>
+        <div className="flex items-center gap-3 self-start sm:self-auto">
+          <button
+            type="button"
+            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={openCreateModal}
+            disabled={!facility}
+          >
+            Add Appointment
+          </button>
 
-      {loading && appointments.length === 0 && (
-        <p className="text-sm text-slate-600">Loading appointments...</p>
-      )}
+          <button
+            type="button"
+            onClick={() => {
+              localStorage.removeItem("accessToken");
+              localStorage.removeItem("refreshToken");
+              setIsAuthenticated(false);
+            }}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
 
       {error && !isModalOpen && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
+
 
       {(appointments.length > 0 || !loading) && (
         <SchedulerDayView
