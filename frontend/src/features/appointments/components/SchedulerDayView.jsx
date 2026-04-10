@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import { generateTimeSlots } from "../utils/timeSlots";
-import { getTodayLocal, parseLocalDate } from "../utils/dateTime";
+import { generateTimeSlots } from "../../../shared/utils/timeSlots";
+import { getTodayLocal, parseLocalDate } from "../../../shared/utils/dateTime";
 import dayjs from "dayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import TextField from "@mui/material/TextField";

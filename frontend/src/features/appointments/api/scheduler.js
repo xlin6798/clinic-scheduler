@@ -1,4 +1,4 @@
-import { apiRequest, getAuthHeaders } from "./client";
+import { apiRequest, getAuthHeaders } from "../../../shared/api/client";
 
 export function fetchAppointments({ date } = {}) {
   const query = date ? `?date=${encodeURIComponent(date)}` : "";

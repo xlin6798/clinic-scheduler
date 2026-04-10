@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import dayjs from "dayjs";
 import { useForm, Controller } from "react-hook-form";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-import PatientSearchField from "./PatientSearchField";
+import PatientSearchField from "../../patients/components/PatientSearchField";
 
 export default function AppointmentFormModal({
   isOpen,

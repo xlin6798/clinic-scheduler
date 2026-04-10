@@ -8,6 +8,12 @@ Designed and implemented both frontend and backend systems with a focus on usabi
 
 ---
 
+## 🌐 Live Demo
+
+https://clinic-scheduler-68hl.onrender.com
+
+---
+
 ## 🚀 Key Highlights
 
 - 🔎 Real-time Patient Search
@@ -102,9 +108,3 @@ Password: Admin123!
 - Building intuitive UI tied to backend constraints
 - Implementing authentication and multi-tenant logic
 - Debugging database and deployment issues
-
----
-
-## 🌐 Live Demo
-
-https://clinic-scheduler-68hl.onrender.com

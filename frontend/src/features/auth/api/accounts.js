@@ -1,4 +1,4 @@
-import { apiRequest, getAuthHeaders } from "./client";
+import { apiRequest, getAuthHeaders } from "../../../shared/api/client";
 
 export function login(credentials) {
   return apiRequest("/api/accounts/token/", {
