@@ -119,6 +119,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "https://clinic-scheduler-xinyiklins-projects.vercel.app",
+    "https://clinic-scheduler-seven.vercel.app/"
 ]
 
 # allow preview deployments
@@ -129,6 +130,7 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "https://clinic-scheduler-xinyiklins-projects.vercel.app",
+    "https://clinic-scheduler-seven.vercel.app/"
 ]
 
 CORS_ALLOW_CREDENTIALS = True
