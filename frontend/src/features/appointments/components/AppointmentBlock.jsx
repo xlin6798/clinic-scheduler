@@ -6,7 +6,7 @@ export default function AppointmentBlock({
   return (
     <div
       draggable
-      className="flex flex-1 min-w-0 cursor-grab rounded-md border border-white px-2 py-1"
+      className="flex items-center flex-1 min-w-0 h-full cursor-grab rounded-md border border-white px-2"
       style={{
         backgroundColor: appointment.status_color || "#ffffff",
       }}

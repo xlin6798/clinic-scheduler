@@ -72,8 +72,7 @@ function App() {
   } = useFacilityConfig(isAuthenticated, facility?.id);
 
   const {
-    appointments,
-    isLoading: appointmentsLoading,
+    appointments
   } = useAppointments(isAuthenticated, facility?.id, selectedDate);
 
   const appointmentFlow = useAppointmentFlow({
@@ -180,33 +179,6 @@ function App() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold text-slate-900">
-            {facility?.name || "Facility Scheduler"}
-          </h1>
-          {role && <p className="mt-1 text-sm text-slate-500">Role: {role}</p>}
-        </div>
-
-        <div className="flex items-center gap-3 self-start sm:self-auto">
-          <button
-            type="button"
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-            onClick={appointmentFlow.openCreateModal}
-            disabled={!facility}
-          >
-            Add Appointment
-          </button>
-
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-          >
-            Logout
-          </button>
-        </div>
-      </div>
 
       {appError && !appointmentFlow.isModalOpen && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
