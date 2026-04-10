@@ -10,7 +10,7 @@ Designed and implemented both frontend and backend systems with a focus on usabi
 
 ## 🌐 Live Demo
 
-https://clinic-scheduler-68hl.onrender.com
+https://clinic-scheduler-xinyiklins-projects.vercel.app/
 
 ---
 
