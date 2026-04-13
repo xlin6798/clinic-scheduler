@@ -29,10 +29,11 @@ export default function PatientSearchField({
   useEffect(() => {
     const trimmed = query.trim();
 
-    if (!trimmed) {
+    if (trimmed.length < 2) {
       setResults([]);
       setLoading(false);
       setError("");
+      setShowResults(false);
       return;
     }
 
@@ -142,7 +143,7 @@ export default function PatientSearchField({
                     </ul>
                   )}
 
-                  {!loading && !error && query.trim() && results.length === 0 && (
+                  {!loading && !error && query.trim().length >= 2 && results.length === 0 && (
                     <div className="space-y-2 px-3 py-3">
                       <p className="text-sm text-slate-500">No patient found.</p>
                       <div className="flex gap-2">

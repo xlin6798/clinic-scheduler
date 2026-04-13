@@ -189,6 +189,7 @@ function App() {
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         onOpenPatientSearch={() => {
+          patientFlow.setPatientSearchSource("sidebar");
           patientFlow.setIsPatientSearchOpen(true);
           setIsSidebarOpen(false);
         }}
@@ -237,7 +238,10 @@ function App() {
               onDelete={handleDeleteAppointment}
               selectedPatient={appointmentFlow.selectedPatient}
               onSelectPatient={appointmentFlow.setSelectedPatient}
-              onOpenDetailedSearch={() => patientFlow.setIsPatientSearchOpen(true)}
+              onOpenDetailedSearch={() => {
+                patientFlow.setPatientSearchSource("appointment");
+                patientFlow.setIsPatientSearchOpen(true);
+              }}
               onOpenCreatePatient={patientFlow.openCreatePatient}
             />
 
@@ -250,9 +254,10 @@ function App() {
               }}
               onOpenCreatePatient={patientFlow.openCreatePatient}
               onOpenPatientProfile={patientFlow.openEditPatient}
-              allowSelect={!appointmentFlow.editingId}
+              allowSelect={patientFlow.patientSearchSource === "appointment"}
               refreshKey={patientFlow.patientSearchRefreshKey}
               injectedPatient={patientFlow.patientSearchInjectedPatient}
+              injectedPatientMode={patientFlow.patientDetailMode}
             />
 
             <PatientDetailModal

@@ -15,6 +15,7 @@ export default function PatientSearchModal({
   allowSelect = true,
   refreshKey,
   injectedPatient,
+  injectedPatientMode,
 }) {
   const [name, setName] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState(null);
@@ -44,10 +45,11 @@ export default function PatientSearchModal({
         ? dayjs(dateOfBirth).format("YYYY-MM-DD")
         : "";
 
-    const hasAnySearchField =
-      !!trimmedName || !!trimmedChartNumber || !!validDob;
+    const canSearchByName = trimmedName.length >= 2;
+    const canSearchByMrn = trimmedChartNumber.length >= 1;
+    const canSearchByDob = !!validDob;
 
-    if (!hasAnySearchField) {
+    if (!canSearchByName && !canSearchByMrn && !canSearchByDob) {
       setResults([]);
       setSelectedPatientId(null);
       setPage(1);
@@ -62,9 +64,9 @@ export default function PatientSearchModal({
         setPage(1);
 
         const data = await searchPatients({
-          name: trimmedName,
-          date_of_birth: validDob,
-          chart_number: trimmedChartNumber,
+          name: canSearchByName ? trimmedName : "",
+          date_of_birth: canSearchByDob ? validDob : "",
+          chart_number: canSearchByMrn ? trimmedChartNumber : "",
         });
 
         setResults(data);
@@ -79,28 +81,32 @@ export default function PatientSearchModal({
 
   useEffect(() => {
     if (!isOpen) return;
+    if (injectedPatientMode !== "create") return;
 
-    // clear search fields
     setName("");
     setChartNumber("");
     setDateOfBirth(null);
-
-    // clear selection
     setSelectedPatientId(null);
     setPage(1);
-
-    // show only the newly created patient
-    if (results.length === 0) return;
-
-  }, [refreshKey]);
+    setError("");
+  }, [refreshKey, isOpen, injectedPatientMode]);
 
   useEffect(() => {
     if (!injectedPatient) return;
 
-    setResults([injectedPatient]);
+    if (injectedPatientMode === "edit") {
+      setResults((prev) =>
+        prev.map((patient) =>
+          patient.id === injectedPatient.id ? injectedPatient : patient
+        )
+      );
+    } else {
+      setResults([injectedPatient]);
+    }
+
     setSelectedPatientId(injectedPatient.id);
     setPage(1);
-  }, [injectedPatient]);
+  }, [injectedPatient, injectedPatientMode]);
 
   if (!isOpen) return null;
 
