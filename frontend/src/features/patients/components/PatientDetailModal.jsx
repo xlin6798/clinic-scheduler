@@ -60,7 +60,6 @@ export default function PatientDetailModal({
       }
 
       onSaved?.(savedPatient);
-      onClose();
     } catch (error) {
       console.error(error);
       alert("Failed to save patient.");

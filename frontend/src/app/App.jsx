@@ -188,11 +188,6 @@ function App() {
       <AppSidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
-        onOpenPatientSearch={() => {
-          patientFlow.setPatientSearchSource("sidebar");
-          patientFlow.setIsPatientSearchOpen(true);
-          setIsSidebarOpen(false);
-        }}
       />
 
       <div
@@ -203,12 +198,21 @@ function App() {
       >
         <AppNavbar
           fullName={currentUser?.full_name || currentUser?.username || "User"}
+          isSidebarOpen={isSidebarOpen}
           onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
           onLogout={handleLogout}
+          onOpenPatientSearch={() => {
+            patientFlow.setPatientSearchSource("navbar");
+            patientFlow.setIsPatientSearchOpen(true);
+          }}
+          recentPatients={patientFlow.recentPatients}
+          onOpenRecentPatient={(patient) => {
+            patientFlow.openPatientFromHistory(patient);
+          }}
         />
 
         <main className="flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-7xl px-4 py-6">
+          <div className="mx-auto max-w-7xl px-4">
             {appError && !appointmentFlow.isModalOpen && (
               <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {appError}
@@ -253,7 +257,10 @@ function App() {
                 patientFlow.setIsPatientSearchOpen(false);
               }}
               onOpenCreatePatient={patientFlow.openCreatePatient}
-              onOpenPatientProfile={patientFlow.openEditPatient}
+              onOpenPatientProfile={(patient) => {
+                patientFlow.addRecentPatient(patient);
+                patientFlow.openEditPatient(patient);
+              }}
               allowSelect={patientFlow.patientSearchSource === "appointment"}
               refreshKey={patientFlow.patientSearchRefreshKey}
               injectedPatient={patientFlow.patientSearchInjectedPatient}
@@ -265,7 +272,7 @@ function App() {
               mode={patientFlow.patientDetailMode}
               patient={patientFlow.activePatient}
               genderOptions={genderOptions}
-              onClose={() => patientFlow.setIsPatientDetailOpen(false)}
+              onClose={patientFlow.closePatientSearch}
               onSaved={(savedPatient) =>
                 patientFlow.handlePatientSaved(
                   savedPatient,
