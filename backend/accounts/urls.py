@@ -15,6 +15,7 @@ urlpatterns = [
     path("register/", RegisterView.as_view(), name="register"),
     path("me/", UserProfileView.as_view(), name="user_profile"),
 
-        path("health/", health_check),
+    # --- Health check ---
+    path("health/", health_check),
 
 ]
