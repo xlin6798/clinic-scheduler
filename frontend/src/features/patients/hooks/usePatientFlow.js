@@ -2,6 +2,8 @@ import { useState } from "react";
 
 export default function usePatientFlow() {
   const [isPatientSearchOpen, setIsPatientSearchOpen] = useState(false);
+  const [patientSearchSource, setPatientSearchSource] = useState("appointment");
+
   const [patientSearchRefreshKey, setPatientSearchRefreshKey] = useState(0);
   const [patientSearchInjectedPatient, setPatientSearchInjectedPatient] =
     useState(null);
@@ -33,6 +35,8 @@ export default function usePatientFlow() {
   return {
     isPatientSearchOpen,
     setIsPatientSearchOpen,
+    patientSearchSource,
+    setPatientSearchSource,
     patientSearchRefreshKey,
     patientSearchInjectedPatient,
     isPatientDetailOpen,
