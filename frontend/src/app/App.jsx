@@ -130,8 +130,7 @@ function App() {
     deleteMutation.mutate(appointmentFlow.editingId);
   };
 
-  const handleDropAppointment = (date, time24) => {
-    const dragged = appointmentFlow.draggedAppointment;
+  const handleDropAppointment = (date, time24, dragged) => {
     if (!dragged) return;
 
     const payload = {
@@ -224,7 +223,6 @@ function App() {
               selectedDate={selectedDate}
               onDateChange={setSelectedDate}
               onSlotDoubleClick={appointmentFlow.openCreateFromSlot}
-              onAppointmentDragStart={appointmentFlow.setDraggedAppointment}
               onAppointmentDrop={handleDropAppointment}
             />
 
