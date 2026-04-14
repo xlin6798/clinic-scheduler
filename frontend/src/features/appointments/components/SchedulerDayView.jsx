@@ -68,6 +68,9 @@ export default function SchedulerDayView({
   useEffect(() => {
     if (!dragState) return;
 
+    document.body.style.cursor = "grabbing";
+    document.body.style.userSelect = "none";
+
     const handlePointerMove = (e) => {
       const slotIndex = getSlotIndexFromPointer(e.clientY);
       if (slotIndex == null) return;
@@ -85,6 +88,9 @@ export default function SchedulerDayView({
     };
 
     const handlePointerUp = () => {
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+
       if (!dragState) return;
 
       const targetSlot = timeSlots[dragState.hoverSlotIndex];
@@ -101,6 +107,8 @@ export default function SchedulerDayView({
     window.addEventListener("pointerup", handlePointerUp);
 
     return () => {
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
     };
