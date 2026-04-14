@@ -1,7 +1,6 @@
+from colorfield.fields import ColorField
 from django.conf import settings
 from django.db import models
-from colorfield.fields import ColorField
-
 
 # --- 1. SEED DATA ---
 
@@ -46,6 +45,7 @@ DEFAULT_PATIENT_GENDERS = [
 ]
 
 # --- 2. FACILITY MODEL ---
+
 
 class Facility(models.Model):
     name = models.CharField(max_length=100)
@@ -105,6 +105,7 @@ class Facility(models.Model):
 
 
 # --- 3. CONFIGURATION MODELS ---
+
 
 class AppointmentStatus(models.Model):
     facility = models.ForeignKey(
@@ -180,6 +181,7 @@ class StaffTitle(models.Model):
 
 # --- 4. STAFF MODEL ---
 
+
 class Staff(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -207,7 +209,8 @@ class Staff(models.Model):
     def __str__(self):
         name = self.user.get_full_name() or self.user.username
         return f"{name} ({self.role.name}) - {self.facility.name}"
-    
+
+
 class PatientGender(models.Model):
     facility = models.ForeignKey(
         Facility,

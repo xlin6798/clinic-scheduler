@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from .models import Appointment
 
 
@@ -30,16 +31,18 @@ class AppointmentAdmin(admin.ModelAdmin):
     readonly_fields = ("created_at", "created_by_name")
 
     fieldsets = (
-        ("Primary Information", {
-            "fields": (("patient", "doctor_name"), "facility")
-        }),
-        ("Schedule & Logistics", {
-            "fields": ("appointment_time", "appointment_type", "status", "reason")
-        }),
-        ("System Logs", {
-            "classes": ("collapse",),
-            "fields": ("created_by", "created_by_name", "created_at")
-        }),
+        ("Primary Information", {"fields": (("patient", "doctor_name"), "facility")}),
+        (
+            "Schedule & Logistics",
+            {"fields": ("appointment_time", "appointment_type", "status", "reason")},
+        ),
+        (
+            "System Logs",
+            {
+                "classes": ("collapse",),
+                "fields": ("created_by", "created_by_name", "created_at"),
+            },
+        ),
     )
 
     def patient_display(self, obj):

@@ -5,10 +5,7 @@ import {
   deleteAppointment,
 } from "../api/scheduler";
 
-export default function useAppointmentMutations({
-  onCloseModal,
-  setError,
-}) {
+export default function useAppointmentMutations({ onCloseModal, setError }) {
   const queryClient = useQueryClient();
 
   const invalidateAppointments = async () => {

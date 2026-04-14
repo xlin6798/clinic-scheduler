@@ -1,20 +1,31 @@
 from rest_framework import serializers
+
 from .models import Appointment
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
     patient_name = serializers.SerializerMethodField()
     patient_id = serializers.IntegerField(source="patient.id", read_only=True)
-    patient_date_of_birth = serializers.DateField(source="patient.date_of_birth", read_only=True)
-    patient_chart_number = serializers.CharField(source="patient.chart_number", read_only=True)
+    patient_date_of_birth = serializers.DateField(
+        source="patient.date_of_birth", read_only=True
+    )
+    patient_chart_number = serializers.CharField(
+        source="patient.chart_number", read_only=True
+    )
 
     status_name = serializers.CharField(source="status.name", read_only=True)
     status_code = serializers.CharField(source="status.code", read_only=True)
     status_color = serializers.CharField(source="status.color", read_only=True)
 
-    appointment_type_name = serializers.CharField(source="appointment_type.name", read_only=True)
-    appointment_type_code = serializers.CharField(source="appointment_type.code", read_only=True)
-    appointment_type_color = serializers.CharField(source="appointment_type.color", read_only=True)
+    appointment_type_name = serializers.CharField(
+        source="appointment_type.name", read_only=True
+    )
+    appointment_type_code = serializers.CharField(
+        source="appointment_type.code", read_only=True
+    )
+    appointment_type_color = serializers.CharField(
+        source="appointment_type.color", read_only=True
+    )
 
     class Meta:
         model = Appointment

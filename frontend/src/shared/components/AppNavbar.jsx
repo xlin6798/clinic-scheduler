@@ -53,10 +53,7 @@ export default function AppNavbar({
               {APP_NAME}
             </h1>
 
-            <div
-              ref={patientMenuRef}
-              className="relative flex items-center"
-            >
+            <div ref={patientMenuRef} className="relative flex items-center">
               <div className="inline-flex items-center gap-1 rounded-md bg-transparent">
                 <button
                   type="button"

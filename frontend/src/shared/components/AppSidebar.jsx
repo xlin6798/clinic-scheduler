@@ -1,9 +1,6 @@
 import { Menu, LayoutDashboard } from "lucide-react";
 
-export default function AppSidebar({
-  isCollapsed,
-  onToggleCollapse,
-}) {
+export default function AppSidebar({ isCollapsed, onToggleCollapse }) {
   return (
     <aside
       className={[

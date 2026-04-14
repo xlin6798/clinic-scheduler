@@ -130,7 +130,9 @@ class Command(BaseCommand):
         facility = self._seed_users_and_facility()
         self._ensure_patient_genders(facility)
         patients = self._seed_patients(facility)
-        self._seed_appointments(facility, patients, reset_appointments=options["reset_appointments"])
+        self._seed_appointments(
+            facility, patients, reset_appointments=options["reset_appointments"]
+        )
 
         self.stdout.write(self.style.SUCCESS("Successfully seeded Demo Clinic data"))
 
@@ -160,7 +162,9 @@ class Command(BaseCommand):
 
         # 3. Roles / titles seeded by facility logic
         admin_role = StaffRole.objects.filter(facility=facility, code="admin").first()
-        physician_role = StaffRole.objects.filter(facility=facility, code="physician").first()
+        physician_role = StaffRole.objects.filter(
+            facility=facility, code="physician"
+        ).first()
         md_title = StaffTitle.objects.filter(facility=facility, code="md").first()
 
         if not admin_role or not physician_role:
@@ -253,7 +257,10 @@ class Command(BaseCommand):
                 if hasattr(gender_obj, "name") and gender_obj.name != item["name"]:
                     gender_obj.name = item["name"]
                     updated = True
-                if hasattr(gender_obj, "sort_order") and gender_obj.sort_order != item["sort_order"]:
+                if (
+                    hasattr(gender_obj, "sort_order")
+                    and gender_obj.sort_order != item["sort_order"]
+                ):
                     gender_obj.sort_order = item["sort_order"]
                     updated = True
                 if hasattr(gender_obj, "is_active") and not gender_obj.is_active:
@@ -271,7 +278,10 @@ class Command(BaseCommand):
 
         # FK version
         if PatientGender is None:
-            raise RuntimeError("Patient.gender is relational but PatientGender model was not found.")
+            raise RuntimeError(
+                "PatientGender with code "
+                f"'{gender_code}' not found for facility '{facility.name}'."
+            )
 
         gender_obj = PatientGender.objects.filter(
             facility=facility,
@@ -280,7 +290,9 @@ class Command(BaseCommand):
         ).first()
 
         if not gender_obj:
-            raise RuntimeError(f"PatientGender with code '{gender_code}' not found for facility '{facility.name}'.")
+            raise RuntimeError(
+                f"PatientGender with code '{gender_code}' not found for facility '{facility.name}'."
+            )
 
         return gender_obj
 
@@ -348,7 +360,9 @@ class Command(BaseCommand):
 
         status_lookup = {
             obj.code: obj
-            for obj in AppointmentStatus.objects.filter(facility=facility, is_active=True)
+            for obj in AppointmentStatus.objects.filter(
+                facility=facility, is_active=True
+            )
         }
         type_lookup = {
             obj.code: obj

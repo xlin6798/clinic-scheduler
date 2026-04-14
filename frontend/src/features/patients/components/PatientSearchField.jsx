@@ -143,27 +143,32 @@ export default function PatientSearchField({
                     </ul>
                   )}
 
-                  {!loading && !error && query.trim().length >= 2 && results.length === 0 && (
-                    <div className="space-y-2 px-3 py-3">
-                      <p className="text-sm text-slate-500">No patient found.</p>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={onOpenCreatePatient}
-                          className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
-                        >
-                          Create New Patient
-                        </button>
-                        <button
-                          type="button"
-                          onClick={onOpenDetailedSearch}
-                          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                        >
-                          Advanced Search
-                        </button>
+                  {!loading &&
+                    !error &&
+                    query.trim().length >= 2 &&
+                    results.length === 0 && (
+                      <div className="space-y-2 px-3 py-3">
+                        <p className="text-sm text-slate-500">
+                          No patient found.
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={onOpenCreatePatient}
+                            className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                          >
+                            Create New Patient
+                          </button>
+                          <button
+                            type="button"
+                            onClick={onOpenDetailedSearch}
+                            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                          >
+                            Advanced Search
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </div>
               )}
             </div>

@@ -69,7 +69,9 @@ export default function SchedulerDayView({
 
     e.preventDefault();
 
-    const slotIndex = timeSlots.findIndex((slot) => slot.time24 === appointment.time);
+    const slotIndex = timeSlots.findIndex(
+      (slot) => slot.time24 === appointment.time
+    );
 
     setDragState({
       appointment,
@@ -109,7 +111,11 @@ export default function SchedulerDayView({
       const didTimeChange = targetSlot?.time24 !== dragState.originalTime;
 
       if (didTimeChange && targetSlot) {
-        onAppointmentDrop?.(selectedDate, targetSlot.time24, dragState.appointment);
+        onAppointmentDrop?.(
+          selectedDate,
+          targetSlot.time24,
+          dragState.appointment
+        );
       }
 
       setDragState(null);
@@ -194,10 +200,7 @@ export default function SchedulerDayView({
           </div>
         </div>
 
-        <div
-          ref={dayViewRef}
-          className="max-h-[80vh] overflow-y-auto"
-        >
+        <div ref={dayViewRef} className="max-h-[80vh] overflow-y-auto">
           {timeSlots.map((slot, slotIndex) => {
             const slotAppointments = appointmentsForDay.filter((a) => {
               const [h, m] = a.time.split(":").map(Number);
@@ -211,8 +214,8 @@ export default function SchedulerDayView({
 
             const previewAppointment =
               dragState &&
-                dragState.hoverSlotIndex === slotIndex &&
-                dragState.appointment.date === selectedDate
+              dragState.hoverSlotIndex === slotIndex &&
+              dragState.appointment.date === selectedDate
                 ? dragState.appointment
                 : null;
 
@@ -228,10 +231,13 @@ export default function SchedulerDayView({
 
                 <div
                   className="flex flex-1 gap-1 px-2 py-0.5"
-                  onDoubleClick={() => onSlotDoubleClick?.(selectedDate, slot.time24)}
+                  onDoubleClick={() =>
+                    onSlotDoubleClick?.(selectedDate, slot.time24)
+                  }
                 >
                   {slotAppointments.map((a) => {
-                    const isDraggingCurrent = dragState?.appointment.id === a.id;
+                    const isDraggingCurrent =
+                      dragState?.appointment.id === a.id;
 
                     return (
                       <AppointmentBlock
@@ -245,7 +251,9 @@ export default function SchedulerDayView({
                   })}
 
                   {previewAppointment &&
-                    !slotAppointments.some((a) => a.id === previewAppointment.id) && (
+                    !slotAppointments.some(
+                      (a) => a.id === previewAppointment.id
+                    ) && (
                       <div className="pointer-events-none flex min-w-0 flex-1">
                         <div
                           className="flex h-full min-w-0 flex-1 items-center rounded-md border border-dashed border-slate-400 px-2 opacity-80"
@@ -260,7 +268,8 @@ export default function SchedulerDayView({
                               width: "12px",
                               height: "12px",
                               backgroundColor:
-                                previewAppointment.appointment_type_color || "#ccc",
+                                previewAppointment.appointment_type_color ||
+                                "#ccc",
                             }}
                           />
 

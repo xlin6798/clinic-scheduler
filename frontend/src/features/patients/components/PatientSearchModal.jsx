@@ -148,7 +148,8 @@ export default function PatientSearchModal({
               Patient Search
             </h2>
             <p className="mt-1 text-sm text-slate-500">
-              Search by name, date of birth, and MRN. All filled fields must match.
+              Search by name, date of birth, and MRN. All filled fields must
+              match.
             </p>
           </div>
 
@@ -256,8 +257,9 @@ export default function PatientSearchModal({
                         key={patient.id}
                         onClick={() => setSelectedPatientId(patient.id)}
                         onDoubleClick={() => onOpenPatientProfile?.(patient)}
-                        className={`cursor-pointer select-none transition ${isSelected ? "bg-blue-50" : "hover:bg-slate-50"
-                          }`}
+                        className={`cursor-pointer select-none transition ${
+                          isSelected ? "bg-blue-50" : "hover:bg-slate-50"
+                        }`}
                       >
                         <td className="select-none px-4 py-3 text-slate-900">
                           {patient.display_name || patient.full_name}
@@ -312,8 +314,9 @@ export default function PatientSearchModal({
         <div className="flex items-center justify-between border-t border-slate-200 px-6 py-4">
           <div className="text-sm text-slate-500">
             {selectedPatient
-              ? `Selected: ${selectedPatient.display_name || selectedPatient.full_name
-              }`
+              ? `Selected: ${
+                  selectedPatient.display_name || selectedPatient.full_name
+                }`
               : "No patient selected"}
           </div>
 

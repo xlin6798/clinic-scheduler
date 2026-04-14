@@ -2,12 +2,12 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from .models import (
-    Facility,
     AppointmentStatus,
     AppointmentType,
+    Facility,
+    Staff,
     StaffRole,
     StaffTitle,
-    Staff,
 )
 
 User = get_user_model()

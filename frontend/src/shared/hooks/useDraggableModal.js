@@ -4,10 +4,7 @@ function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
 
-export default function useDraggableModal({
-  isOpen,
-  resetOnOpen = true,
-} = {}) {
+export default function useDraggableModal({ isOpen, resetOnOpen = true } = {}) {
   const modalRef = useRef(null);
   const dragStateRef = useRef(null);
 
@@ -127,9 +124,9 @@ export default function useDraggableModal({
 
   const modalStyle = position
     ? {
-      left: `${position.x}px`,
-      top: `${position.y}px`,
-    }
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+      }
     : undefined;
 
   return {

@@ -1,6 +1,11 @@
 import { apiRequest, getAuthHeaders } from "../../../shared/api/client";
 
-export function searchPatients({ search, name, date_of_birth, chart_number } = {}) {
+export function searchPatients({
+  search,
+  name,
+  date_of_birth,
+  chart_number,
+} = {}) {
   const params = new URLSearchParams();
 
   if (search) params.append("search", search);

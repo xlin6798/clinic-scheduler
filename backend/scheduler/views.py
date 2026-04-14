@@ -3,7 +3,8 @@ from datetime import datetime
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
 
-from facilities.views import get_request_user, get_active_staff_profile
+from facilities.views import get_active_staff_profile, get_request_user
+
 from .models import Appointment
 from .serializers import AppointmentSerializer
 
@@ -57,7 +58,9 @@ class AppointmentListCreateView(generics.ListCreateAPIView):
             raise PermissionDenied("Selected status does not belong to this facility.")
 
         if appointment_type.facility_id != facility.id:
-            raise PermissionDenied("Selected appointment type does not belong to this facility.")
+            raise PermissionDenied(
+                "Selected appointment type does not belong to this facility."
+            )
 
         serializer.save(created_by=user)
 
@@ -73,9 +76,8 @@ class AppointmentDetailView(generics.RetrieveUpdateDestroyAPIView):
         if not profile:
             return Appointment.objects.none()
 
-        return (
-            Appointment.objects.filter(facility=profile.facility)
-            .select_related("patient", "status", "appointment_type", "facility")
+        return Appointment.objects.filter(facility=profile.facility).select_related(
+            "patient", "status", "appointment_type", "facility"
         )
 
     def perform_update(self, serializer):
@@ -85,7 +87,9 @@ class AppointmentDetailView(generics.RetrieveUpdateDestroyAPIView):
         if not profile:
             raise PermissionDenied("Authentication required.")
 
-        facility = serializer.validated_data.get("facility", serializer.instance.facility)
+        facility = serializer.validated_data.get(
+            "facility", serializer.instance.facility
+        )
         patient = serializer.validated_data.get("patient", serializer.instance.patient)
         status = serializer.validated_data.get("status", serializer.instance.status)
         appointment_type = serializer.validated_data.get(
@@ -103,6 +107,8 @@ class AppointmentDetailView(generics.RetrieveUpdateDestroyAPIView):
             raise PermissionDenied("Selected status does not belong to this facility.")
 
         if appointment_type.facility_id != facility.id:
-            raise PermissionDenied("Selected appointment type does not belong to this facility.")
+            raise PermissionDenied(
+                "Selected appointment type does not belong to this facility."
+            )
 
         serializer.save()

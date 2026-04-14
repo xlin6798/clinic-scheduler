@@ -1,14 +1,14 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework import generics, permissions, status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.exceptions import PermissionDenied
 
 from .models import (
-    Staff,
     AppointmentStatus,
     AppointmentType,
+    Staff,
     StaffRole,
     StaffTitle,
 )
@@ -46,6 +46,7 @@ class CurrentUserView(APIView):
     """
     Returns data about the logged-in user and their current facility/role.
     """
+
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
@@ -63,10 +64,14 @@ class CurrentUserView(APIView):
             "username": user.username,
             "full_name": user.get_full_name() or user.username,
             "role": profile.role.code if profile and profile.role else None,
-            "facility": {
-                "id": profile.facility.id,
-                "name": profile.facility.name,
-            } if profile and profile.facility else None,
+            "facility": (
+                {
+                    "id": profile.facility.id,
+                    "name": profile.facility.name,
+                }
+                if profile and profile.facility
+                else None
+            ),
         }
 
         return Response(data)
@@ -143,6 +148,7 @@ class StaffRoleListView(generics.ListAPIView):
     """
     Lists available active roles for the current facility.
     """
+
     serializer_class = StaffRoleSerializer
     permission_classes = [permissions.AllowAny]
 
@@ -174,7 +180,8 @@ class StaffTitleListView(generics.ListAPIView):
             facility=profile.facility,
             is_active=True,
         ).order_by("id")
-    
+
+
 class PatientGendersView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -187,11 +194,13 @@ class PatientGendersView(APIView):
 
         genders = profile.facility.patient_genders.filter(is_active=True)
 
-        return Response([
-            {
-                "id": gender.id,
-                "code": gender.code,
-                "name": gender.name,
-            }
-            for gender in genders
-        ])
+        return Response(
+            [
+                {
+                    "id": gender.id,
+                    "code": gender.code,
+                    "name": gender.name,
+                }
+                for gender in genders
+            ]
+        )

@@ -1,7 +1,7 @@
-from django.db import models
 from rest_framework import generics, permissions
 
-from facilities.views import get_request_user, get_active_staff_profile
+from facilities.views import get_active_staff_profile, get_request_user
+
 from .models import Patient
 from .serializers import PatientSerializer
 
@@ -18,8 +18,7 @@ class PatientListCreateView(generics.ListCreateAPIView):
             return Patient.objects.none()
 
         base_queryset = Patient.objects.filter(
-            facility=profile.facility,
-            is_active=True
+            facility=profile.facility, is_active=True
         )
 
         quick_search = (self.request.query_params.get("search") or "").strip()
@@ -38,9 +37,7 @@ class PatientListCreateView(generics.ListCreateAPIView):
                     first_name__icontains=first,
                 )
             else:
-                queryset = queryset.filter(
-                    last_name__icontains=quick_search
-                )
+                queryset = queryset.filter(last_name__icontains=quick_search)
 
             return queryset.order_by("last_name", "first_name")
 
@@ -58,9 +55,7 @@ class PatientListCreateView(generics.ListCreateAPIView):
                     first_name__icontains=first,
                 )
             else:
-                queryset = queryset.filter(
-                    last_name__icontains=name
-                )
+                queryset = queryset.filter(last_name__icontains=name)
 
         if date_of_birth:
             queryset = queryset.filter(date_of_birth=date_of_birth)

@@ -19,7 +19,7 @@ import useAppointmentMutations from "../features/appointments/hooks/useAppointme
 import useAppointmentFlow from "../features/appointments/hooks/useAppointmentFlow";
 import usePatientFlow from "../features/patients/hooks/usePatientFlow";
 
-import AppNavbar from "../shared/components/AppNavbar"
+import AppNavbar from "../shared/components/AppNavbar";
 import AppSidebar from "../shared/components/AppSidebar";
 
 function App() {
@@ -71,16 +71,14 @@ function App() {
     error: userError,
   } = useCurrentUser(isAuthenticated);
 
-  const {
-    physicians,
-    statusOptions,
-    typeOptions,
-    genderOptions,
-  } = useFacilityConfig(isAuthenticated, facility?.id);
+  const { physicians, statusOptions, typeOptions, genderOptions } =
+    useFacilityConfig(isAuthenticated, facility?.id);
 
-  const {
-    appointments
-  } = useAppointments(isAuthenticated, facility?.id, selectedDate);
+  const { appointments } = useAppointments(
+    isAuthenticated,
+    facility?.id,
+    selectedDate
+  );
 
   const appointmentFlow = useAppointmentFlow({
     facility,
@@ -92,15 +90,11 @@ function App() {
 
   const patientFlow = usePatientFlow();
 
-  const {
-    createMutation,
-    updateMutation,
-    deleteMutation,
-    moveMutation,
-  } = useAppointmentMutations({
-    onCloseModal: appointmentFlow.closeModal,
-    setError: setAppError,
-  });
+  const { createMutation, updateMutation, deleteMutation, moveMutation } =
+    useAppointmentMutations({
+      onCloseModal: appointmentFlow.closeModal,
+      setError: setAppError,
+    });
 
   const handleSubmitAppointment = (submittedData) => {
     const payload = {
@@ -191,7 +185,7 @@ function App() {
       <div
         className={[
           "flex flex-1 flex-col transition-all duration-200",
-          isSidebarCollapsed ? "ml-16" : "ml-36"
+          isSidebarCollapsed ? "ml-16" : "ml-36",
         ].join(" ")}
       >
         <AppNavbar
