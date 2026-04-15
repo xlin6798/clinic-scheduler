@@ -6,7 +6,7 @@ import PatientSearchField from "../../patients/components/PatientSearchField";
 import { X } from "lucide-react";
 import useDraggableModal from "../../../shared/hooks/useDraggableModal";
 
-export default function AppointmentFormModal({
+export default function AppointmentModal({
   isOpen,
   mode,
   formData,

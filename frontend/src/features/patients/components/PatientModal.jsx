@@ -12,7 +12,7 @@ const emptyValues = {
   is_active: true,
 };
 
-export default function PatientDetailModal({
+export default function PatientModal({
   isOpen,
   mode,
   patient,
@@ -40,7 +40,7 @@ export default function PatientDetailModal({
       first_name: patient?.first_name || "",
       last_name: patient?.last_name || "",
       date_of_birth: patient?.date_of_birth || "",
-      gender: mode === "create" ? "U" : patient?.gender || "U",
+      gender: mode === "edit" ? patient?.gender || "" : "",
       is_active: patient?.is_active ?? true,
     });
   }, [isOpen, patient, mode, reset]);
