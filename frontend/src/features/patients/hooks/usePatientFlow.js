@@ -5,20 +5,19 @@ const RECENT_PATIENTS_KEY = "recentPatients";
 const MAX_RECENT_PATIENTS = 10;
 
 export default function usePatientFlow() {
-  const [isPatientSearchOpen, setIsPatientSearchOpen] = useState(false);
-  const [patientSearchSource, setPatientSearchSource] = useState("appointment");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchSource, setSearchSource] = useState("appointment");
 
-  const [patientSearchInjectedPatient, setPatientSearchInjectedPatient] =
-    useState(null);
+  const [searchInjectedPatient, setSearchInjectedPatient] = useState(null);
 
-  const [isPatientModalOpen, setIsPatientModalOpen] = useState(false);
-  const [patientModalMode, setPatientModalMode] = useState("create");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState("create");
   const [activePatient, setActivePatient] = useState(null);
 
-  const openPatientModal = ({ mode, patient = null }) => {
-    setPatientModalMode(mode);
+  const openModal = ({ mode, patient = null }) => {
+    setModalMode(mode);
     setActivePatient(patient);
-    setIsPatientModalOpen(true);
+    setIsModalOpen(true);
   };
 
   const [recentPatients, setRecentPatients] = useState(() => {
@@ -66,57 +65,55 @@ export default function usePatientFlow() {
     try {
       const fullPatient = await fetchPatientById(patient.id);
       addRecentPatient(patient);
-      openPatientModal({ mode: "edit", patients: fullPatient });
+      openModal({ mode: "edit", patient: fullPatient });
     } catch (error) {
       console.error("Failed to load full patient details.", error);
     }
   };
 
-  const closePatientSearch = () => {
-    setIsPatientSearchOpen(false);
+  const closeSearch = () => {
+    setIsSearchOpen(false);
   };
 
-  const openPatientSearch = (source) => {
-    setPatientSearchSource(source);
-    setIsPatientSearchOpen(true);
-    setPatientSearchInjectedPatient(null);
+  const openSearch = (source) => {
+    setSearchSource(source);
+    setIsSearchOpen(true);
+    setSearchInjectedPatient(null);
   };
 
-  const closePatientModal = () => {
-    setIsPatientModalOpen(false);
-    setPatientModalMode("create");
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setModalMode("create");
     setActivePatient(null);
   };
 
   const handlePatientSaved = (savedPatient, setSelectedPatient) => {
     setActivePatient(savedPatient);
     setSelectedPatient?.(savedPatient);
-    setPatientSearchInjectedPatient(savedPatient);
+    setSearchInjectedPatient(savedPatient);
 
-    if (patientModalMode === "edit") {
+    if (modalMode === "edit") {
       addRecentPatient(savedPatient);
     }
 
-    closePatientModal();
+    closeModal();
   };
 
   return {
     search: {
-      isOpen: isPatientSearchOpen,
-      source: patientSearchSource,
-      injectedPatient: patientSearchInjectedPatient,
-      open: openPatientSearch,
-      close: closePatientSearch,
+      isOpen: isSearchOpen,
+      source: searchSource,
+      injectedPatient: searchInjectedPatient,
+      open: openSearch,
+      close: closeSearch,
     },
 
     modal: {
-      isOpen: isPatientModalOpen,
-      mode: patientModalMode,
+      isOpen: isModalOpen,
+      mode: modalMode,
       patient: activePatient,
-      open: openPatientModal,
-      close: closePatientModal,
-      openCreate: () => openPatientModal({ mode: "create" }),
-      openEdit: (patient) => openPatientModal({ mode: "edit", patient }),
+      open: openModal,
+      close: closeModal,
     },
 
     recentPatients,

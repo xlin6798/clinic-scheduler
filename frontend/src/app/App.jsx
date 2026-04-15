@@ -1,5 +1,5 @@
 import "../App.css";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { login } from "../features/auth/api/accounts";
 
@@ -249,7 +249,7 @@ function App() {
         title: "Possible Double Booking",
         message:
           "This patient already has an appointment on this date. Moving this appointment may result in a double booking. Do you want to proceed anyway?",
-        confirmText: "Proceed Anyway",
+        confirmText: "Confirm",
         cancelText: "Cancel",
         variant: "warning",
         onConfirm: async () => {
@@ -262,9 +262,18 @@ function App() {
     }
   };
 
+  const openAppointmentModal = appointmentFlow.modal.open;
+
+  const handleOpenEdit = useCallback(
+    (appointment) => {
+      openAppointmentModal({ mode: "edit", appointment });
+    },
+    [openAppointmentModal]
+  );
+
   const formattedAppointments = useMemo(
-    () => formatAppointments(appointments, appointmentFlow.modal.openEdit),
-    [appointments, appointmentFlow.modal.openEdit]
+    () => formatAppointments(appointments, handleOpenEdit),
+    [appointments, handleOpenEdit]
   );
 
   if (!isAuthenticated) {
@@ -367,7 +376,7 @@ function App() {
               }
               onOpenPatientProfile={(patient) => {
                 patientFlow.addRecentPatient(patient);
-                patientFlow.modal.openEdit(patient);
+                patientFlow.modal.open({ mode: "edit", patient });
               }}
               allowSelect={patientFlow.search.source === "appointment"}
               injectedPatient={patientFlow.search.injectedPatient}
