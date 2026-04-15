@@ -90,13 +90,25 @@ function App() {
 
   const patientFlow = usePatientFlow();
 
-  const { createMutation, updateMutation, deleteMutation, moveMutation } =
-    useAppointmentMutations({
-      onCloseModal: appointmentFlow.closeModal,
-      setError: setAppError,
-    });
+  const handleCloseAppointmentModal = () => {
+    setAppError("");
+    appointmentFlow.closeModal();
+  };
 
-  const handleSubmitAppointment = (submittedData) => {
+  const {
+    createMutation,
+    updateMutation,
+    deleteMutation,
+    moveMutation,
+    getDuplicateDayAppointmentError,
+  } = useAppointmentMutations({
+    onCloseModal: handleCloseAppointmentModal,
+    setError: setAppError,
+  });
+
+  const handleSubmitAppointment = async (submittedData) => {
+    setAppError("");
+
     const payload = {
       ...submittedData,
       patient: appointmentFlow.selectedPatient?.id || "",
@@ -107,10 +119,45 @@ function App() {
       facility: submittedData.facility ? Number(submittedData.facility) : "",
     };
 
-    if (appointmentFlow.editingId) {
-      updateMutation.mutate({ id: appointmentFlow.editingId, data: payload });
-    } else {
-      createMutation.mutate(payload);
+    try {
+      if (appointmentFlow.editingId) {
+        await updateMutation.mutateAsync({
+          id: appointmentFlow.editingId,
+          data: payload,
+        });
+      } else {
+        await createMutation.mutateAsync(payload);
+      }
+    } catch (err) {
+      const duplicateError = getDuplicateDayAppointmentError(err);
+
+      if (!duplicateError) {
+        return;
+      }
+
+      setAppError("");
+
+      const confirmed = window.confirm(
+        "This patient already has an appointment on this date.\n\nDo you want to proceed anyway?"
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      const overridePayload = {
+        ...payload,
+        allow_same_day_double_book: true,
+      };
+
+      if (appointmentFlow.editingId) {
+        await updateMutation.mutateAsync({
+          id: appointmentFlow.editingId,
+          data: overridePayload,
+        });
+      } else {
+        await createMutation.mutateAsync(overridePayload);
+      }
     }
   };
 
@@ -226,7 +273,7 @@ function App() {
               typeOptions={typeOptions}
               error={appError}
               onSubmit={handleSubmitAppointment}
-              onClose={appointmentFlow.closeModal}
+              onClose={handleCloseAppointmentModal}
               onDelete={handleDeleteAppointment}
               selectedPatient={appointmentFlow.selectedPatient}
               onSelectPatient={appointmentFlow.setSelectedPatient}

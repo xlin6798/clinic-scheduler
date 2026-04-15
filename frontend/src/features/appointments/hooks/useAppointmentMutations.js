@@ -12,6 +12,9 @@ export default function useAppointmentMutations({ onCloseModal, setError }) {
     await queryClient.invalidateQueries({ queryKey: ["appointments"] });
   };
 
+  const getDuplicateDayAppointmentError = (err) =>
+    err?.data?.duplicate_day_appointment ?? null;
+
   const createMutation = useMutation({
     mutationFn: createAppointment,
     onSuccess: async () => {
@@ -21,6 +24,12 @@ export default function useAppointmentMutations({ onCloseModal, setError }) {
     },
     onError: (err) => {
       console.error(err);
+
+      if (getDuplicateDayAppointmentError(err)) {
+        setError("");
+        return;
+      }
+
       setError("Failed to save appointment.");
     },
   });
@@ -34,6 +43,12 @@ export default function useAppointmentMutations({ onCloseModal, setError }) {
     },
     onError: (err) => {
       console.error(err);
+
+      if (getDuplicateDayAppointmentError(err)) {
+        setError("");
+        return;
+      }
+
       setError("Failed to save appointment.");
     },
   });
@@ -68,5 +83,6 @@ export default function useAppointmentMutations({ onCloseModal, setError }) {
     updateMutation,
     deleteMutation,
     moveMutation,
+    getDuplicateDayAppointmentError,
   };
 }

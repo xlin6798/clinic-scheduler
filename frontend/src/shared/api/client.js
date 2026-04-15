@@ -86,16 +86,24 @@ export async function apiRequest(path, options = {}, retry = true) {
   }
 
   if (!response.ok) {
+    let errorData = null;
     let errorMessage = "API request failed";
 
     try {
-      const errorData = await response.json();
-      errorMessage = errorData.detail || JSON.stringify(errorData);
+      errorData = await response.json();
+      errorMessage =
+        errorData?.detail ||
+        errorData?.message ||
+        response.statusText ||
+        errorMessage;
     } catch {
       errorMessage = response.statusText || errorMessage;
     }
 
-    throw new Error(errorMessage);
+    const error = new Error(errorMessage);
+    error.status = response.status;
+    error.data = errorData;
+    throw error;
   }
 
   if (response.status === 204) {
