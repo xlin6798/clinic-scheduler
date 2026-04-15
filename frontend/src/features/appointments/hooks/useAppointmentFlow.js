@@ -61,21 +61,6 @@ export default function useAppointmentFlow({
     setIsModalOpen(true);
   };
 
-  const openCreateModal = () => {
-    openAppointmentDetail({ mode: "create" });
-  };
-
-  const openCreateFromSlot = (date, time24) => {
-    openAppointmentDetail({
-      mode: "create",
-      appointmentTime: `${date}T${time24}`,
-    });
-  };
-
-  const openEditModal = (appointment) => {
-    openAppointmentDetail({ mode: "edit", appointment });
-  };
-
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingId(null);
