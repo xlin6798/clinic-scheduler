@@ -68,6 +68,7 @@ class CurrentUserView(APIView):
                 {
                     "id": profile.facility.id,
                     "name": profile.facility.name,
+                    "timezone": str(profile.facility.timezone),
                 }
                 if profile and profile.facility
                 else None

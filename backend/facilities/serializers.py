@@ -25,9 +25,14 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class FacilitySerializer(serializers.ModelSerializer):
+    timezone = serializers.SerializerMethodField()
+
     class Meta:
         model = Facility
         fields = ["id", "name"]
+
+    def get_timezone(self, obj):
+        return str(obj.timezone)
 
 
 class AppointmentStatusSerializer(serializers.ModelSerializer):
