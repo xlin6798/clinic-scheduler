@@ -12,7 +12,7 @@ import PatientModal from "../features/patients/components/PatientModal";
 import { getTodayLocal } from "../shared/utils/dateTime";
 import formatAppointments from "../features/appointments/utils/formatAppointments";
 
-import useCurrentUser from "../features/facilities/hooks/useCurrentUser";
+import useCurrentUser from "../features/auth/hooks/useCurrentUser";
 import useFacilityConfig from "../features/facilities/hooks/useFacilityConfig";
 import useAppointments from "../features/appointments/hooks/useAppointments";
 import useAppointmentMutations from "../features/appointments/hooks/useAppointmentMutations";

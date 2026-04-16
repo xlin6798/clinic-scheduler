@@ -1,17 +1,24 @@
 import { useQuery } from "@tanstack/react-query";
 import {
-  fetchPhysicians,
+  fetchPhysicianList,
   fetchAppointmentStatuses,
   fetchAppointmentTypes,
   fetchPatientGenders,
+  fetchStaffList,
 } from "../api/facilities";
 
 export default function useFacilityConfig(isAuthenticated, facilityId) {
   const enabled = isAuthenticated && !!facilityId;
 
-  const physiciansQuery = useQuery({
+  const physicianListQuery = useQuery({
     queryKey: ["physicians", facilityId],
-    queryFn: fetchPhysicians,
+    queryFn: fetchPhysicianList,
+    enabled,
+  });
+
+  const staffListQuery = useQuery({
+    queryKey: ["staffs", facilityId],
+    queryFn: fetchStaffList,
     enabled,
   });
 
@@ -34,7 +41,8 @@ export default function useFacilityConfig(isAuthenticated, facilityId) {
   });
 
   return {
-    physicians: physiciansQuery.data || [],
+    physicians: physicianListQuery.data || [],
+    staffs: staffListQuery.data || [],
     statusOptions: statusOptionsQuery.data || [],
     typeOptions: typeOptionsQuery.data || [],
     genderOptions: genderOptionsQuery.data || [],

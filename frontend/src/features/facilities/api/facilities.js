@@ -1,6 +1,6 @@
 import { apiRequest, getAuthHeaders } from "../../../shared/api/client";
 
-export function fetchPhysicians() {
+export function fetchPhysicianList() {
   return apiRequest("/api/facilities/physicians/", {
     headers: {
       ...getAuthHeaders(),
@@ -42,6 +42,14 @@ export function fetchStaffTitles() {
 
 export function fetchPatientGenders() {
   return apiRequest("/api/facilities/patient-genders/", {
+    headers: {
+      ...getAuthHeaders(),
+    },
+  });
+}
+
+export function fetchStaffList() {
+  return apiRequest("/api/facilities/staffs/", {
     headers: {
       ...getAuthHeaders(),
     },

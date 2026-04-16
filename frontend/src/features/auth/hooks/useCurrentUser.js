@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchUserProfile } from "../../auth/api/accounts";
+import { fetchUserProfile } from "../api/accounts";
 
 export default function useCurrentUser(isAuthenticated) {
   const query = useQuery({

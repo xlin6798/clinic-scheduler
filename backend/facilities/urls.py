@@ -5,9 +5,11 @@ from .views import (
     AppointmentTypeListView,
     PatientGendersView,
     PhysicianListView,
+    StaffListView,
 )
 
 urlpatterns = [
+    path("staffs/", StaffListView.as_view(), name="staff-list"),  # Renamed to staffs
     path("physicians/", PhysicianListView.as_view(), name="physician-list"),
     path(
         "appointment-statuses/",

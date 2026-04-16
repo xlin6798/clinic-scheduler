@@ -56,6 +56,7 @@ export function getAuthHeaders(token) {
 
 export async function apiRequest(path, options = {}, retry = true) {
   const authHeaders = getAuthHeaders();
+  console.log(`${API_BASE}${path}`);
 
   const response = await fetch(`${API_BASE}${path}`, {
     ...options,

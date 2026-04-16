@@ -16,6 +16,7 @@ from .serializers import (
     AppointmentStatusSerializer,
     AppointmentTypeSerializer,
     StaffRoleSerializer,
+    StaffSerializer,
     StaffTitleSerializer,
 )
 
@@ -42,37 +43,40 @@ def get_active_staff_profile(user):
     )
 
 
-class PhysicianListView(APIView):
-    permission_classes = [permissions.AllowAny]
+class StaffListView(generics.ListAPIView):
+    serializer_class = StaffSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-    def get(self, request):
-        user = get_request_user(request)
+    def get_queryset(self):
+        user = get_request_user(self.request)
         profile = get_active_staff_profile(user)
 
         if not profile:
-            return Response([])
+            return Staff.objects.none()
 
-        physicians = (
-            Staff.objects.filter(
-                facility=profile.facility,
-                role__code="physician",
-                role__is_active=True,
-                is_active=True,
-            )
-            .select_related("user", "title")
-            .order_by("user__last_name", "user__first_name")
+        return (
+            Staff.objects.filter(facility=profile.facility)
+            .select_related("user", "role", "title")
+            .order_by("user__last_name")
         )
 
-        data = [
-            {
-                "id": p.user.id,
-                "name": p.user.get_full_name() or p.user.username,
-                "title": p.title.code if p.title else "",
-            }
-            for p in physicians
-        ]
 
-        return Response(data)
+class PhysicianListView(generics.ListAPIView):
+    serializer_class = StaffSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = get_request_user(self.request)
+        profile = get_active_staff_profile(user)
+
+        if not profile:
+            return Staff.objects.none()
+
+        return Staff.objects.filter(
+            facility=profile.facility,
+            role__code="physician",
+            is_active=True,
+        ).select_related("user", "title")
 
 
 class AppointmentStatusListView(generics.ListAPIView):
