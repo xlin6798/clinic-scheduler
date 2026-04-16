@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { searchPatients } from "../api/patients";
+import { parsePatientQuery } from "../utils/parsePatientQuery";
 
 export default function PatientSearchField({
   selectedPatient,
@@ -15,6 +16,11 @@ export default function PatientSearchField({
 
   const containerRef = useRef(null);
 
+  const cleanQuery = useMemo(
+    () => (query || "").trim().replace(/\s+/g, " "),
+    [query]
+  );
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (!containerRef.current?.contains(event.target)) {
@@ -27,9 +33,7 @@ export default function PatientSearchField({
   }, []);
 
   useEffect(() => {
-    const trimmed = query.trim();
-
-    if (trimmed.length < 2) {
+    if (cleanQuery.length < 2) {
       setResults([]);
       setLoading(false);
       setError("");
@@ -41,7 +45,21 @@ export default function PatientSearchField({
       try {
         setLoading(true);
         setError("");
-        const data = await searchPatients({ search: trimmed });
+
+        const parsed = parsePatientQuery(cleanQuery);
+        console.log(parsed);
+
+        const searchPayload =
+          parsed.name || parsed.date_of_birth || parsed.chart_number
+            ? {
+                name: parsed.name,
+                date_of_birth: parsed.date_of_birth,
+                chart_number: parsed.chart_number,
+              }
+            : { search: cleanQuery };
+
+        const data = await searchPatients(searchPayload);
+
         setResults(data);
         setShowResults(true);
       } catch (err) {
@@ -53,7 +71,7 @@ export default function PatientSearchField({
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [cleanQuery]);
 
   const handleSelect = (patient) => {
     onSelectPatient(patient);
@@ -72,7 +90,7 @@ export default function PatientSearchField({
         <div className="flex items-center justify-between rounded-lg border border-slate-300 bg-slate-50 px-3 py-2">
           <div>
             <p className="text-sm font-medium text-slate-900">
-              {selectedPatient.display_name || selectedPatient.full_name}
+              {selectedPatient}
             </p>
             <p className="text-xs text-slate-500">
               DOB: {selectedPatient.date_of_birth}
@@ -129,7 +147,7 @@ export default function PatientSearchField({
                             className="w-full px-3 py-2 text-left hover:bg-slate-50"
                           >
                             <div className="text-sm font-medium text-slate-900">
-                              {patient.display_name || patient.full_name}
+                              {`${patient.last_name}, ${patient.first_name}`}
                             </div>
                             <div className="text-xs text-slate-500">
                               DOB: {patient.date_of_birth}

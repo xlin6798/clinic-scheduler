@@ -262,7 +262,7 @@ export default function PatientSearchModal({
                         }`}
                       >
                         <td className="select-none px-4 py-3 text-slate-900">
-                          {patient.display_name || patient.full_name}
+                          {`${patient.last_name}, ${patient.first_name}`}
                         </td>
                         <td className="select-none px-4 py-3 text-slate-700">
                           {patient.date_of_birth}
