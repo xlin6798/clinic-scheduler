@@ -49,8 +49,8 @@ export default function usePatientFlow() {
       return [
         {
           id: patient.id,
-          full_name: patient.full_name,
-          display_name: patient.display_name,
+          first_name: patient.first_name,
+          last_name: patient.last_name,
           date_of_birth: patient.date_of_birth,
           chart_number: patient.chart_number,
         },

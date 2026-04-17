@@ -101,7 +101,7 @@ export default function AppNavbar({
                             className="block w-full px-4 py-3 text-left transition hover:bg-slate-50"
                           >
                             <div className="text-sm font-medium text-slate-900">
-                              {patient.display_name || patient.full_name}
+                              {`${patient.last_name}, ${patient.first_name}`}
                             </div>
                             <div className="text-xs text-slate-500">
                               DOB: {patient.date_of_birth || "—"}

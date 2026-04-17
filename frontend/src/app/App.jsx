@@ -12,8 +12,8 @@ import PatientModal from "../features/patients/components/PatientModal";
 import { getTodayLocal } from "../shared/utils/dateTime";
 import formatAppointments from "../features/appointments/utils/formatAppointments";
 
-import useCurrentUser from "../features/facility/hooks/useCurrentUser";
-import useFacilityConfig from "../features/facility/hooks/useFacilityConfig";
+import useCurrentUser from "../features/auth/hooks/useCurrentUser";
+import useFacilityConfig from "../features/facilities/hooks/useFacilityConfig";
 import useAppointments from "../features/appointments/hooks/useAppointments";
 import useAppointmentMutations from "../features/appointments/hooks/useAppointmentMutations";
 import useAppointmentFlow from "../features/appointments/hooks/useAppointmentFlow";
@@ -317,7 +317,11 @@ function App() {
         ].join(" ")}
       >
         <AppNavbar
-          fullName={currentUser?.full_name || currentUser?.username || "User"}
+          fullName={
+            currentUser?.first_name && currentUser?.last_name
+              ? `${currentUser.first_name} ${currentUser.last_name}`
+              : currentUser?.username || "User"
+          }
           onLogout={handleLogout}
           onOpenPatientSearch={() => {
             patientFlow.search.open("navbar");

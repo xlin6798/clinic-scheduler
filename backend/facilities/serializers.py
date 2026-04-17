@@ -14,20 +14,32 @@ User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
-    full_name = serializers.SerializerMethodField()
-
     class Meta:
         model = User
-        fields = ["id", "username", "first_name", "last_name", "full_name", "email"]
+        fields = ["id", "username", "first_name", "last_name", "email"]
 
-    def get_full_name(self, obj):
-        return obj.get_full_name() or obj.username
+
+class StaffSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    role_name = serializers.CharField(source="role.name", read_only=True)
+    title_name = serializers.CharField(
+        source="title.name", read_only=True, allow_null=True
+    )
+
+    class Meta:
+        model = Staff
+        fields = ["id", "user", "role_name", "title_name", "is_active"]
 
 
 class FacilitySerializer(serializers.ModelSerializer):
+    timezone = serializers.SerializerMethodField()
+
     class Meta:
         model = Facility
         fields = ["id", "name"]
+
+    def get_timezone(self, obj):
+        return str(obj.timezone)
 
 
 class AppointmentStatusSerializer(serializers.ModelSerializer):
@@ -52,24 +64,3 @@ class StaffTitleSerializer(serializers.ModelSerializer):
     class Meta:
         model = StaffTitle
         fields = "__all__"
-
-
-class StaffSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
-    facility_details = FacilitySerializer(source="facility", read_only=True)
-    role_details = StaffRoleSerializer(source="role", read_only=True)
-    title_details = StaffTitleSerializer(source="title", read_only=True)
-
-    class Meta:
-        model = Staff
-        fields = [
-            "id",
-            "user",
-            "facility",
-            "facility_details",
-            "role",
-            "role_details",
-            "title",
-            "title_details",
-            "is_active",
-        ]

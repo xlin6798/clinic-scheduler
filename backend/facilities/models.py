@@ -1,8 +1,7 @@
 from colorfield.fields import ColorField
 from django.conf import settings
 from django.db import models
-
-# --- 1. SEED DATA ---
+from timezone_field import TimeZoneField
 
 DEFAULT_APPOINTMENT_STATUSES = [
     {"code": "pending", "name": "Pending", "color": "#6c757d"},
@@ -44,12 +43,15 @@ DEFAULT_PATIENT_GENDERS = [
     {"code": "unknown", "name": "Unknown", "sort_order": 4},
 ]
 
-# --- 2. FACILITY MODEL ---
-
 
 class Facility(models.Model):
     name = models.CharField(max_length=100)
-    address = models.TextField(blank=True, null=True)
+
+    address = models.OneToOneField(
+        "shared.Address", on_delete=models.SET_NULL, null=True, related_name="facility"
+    )
+
+    timezone = TimeZoneField(default="America/New_York")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -67,44 +69,39 @@ class Facility(models.Model):
                 AppointmentStatus.objects.get_or_create(
                     facility=self,
                     code=status["code"],
-                    defaults={
-                        "name": status["name"],
-                        "color": status["color"],
-                    },
+                    defaults={"name": status["name"], "color": status["color"]},
                 )
 
             for appt_type in DEFAULT_APPOINTMENT_TYPES:
                 AppointmentType.objects.get_or_create(
                     facility=self,
                     code=appt_type["code"],
-                    defaults={
-                        "name": appt_type["name"],
-                        "color": appt_type["color"],
-                    },
+                    defaults={"name": appt_type["name"], "color": appt_type["color"]},
                 )
 
             for code, name in DEFAULT_ROLES:
                 StaffRole.objects.get_or_create(
                     facility=self,
                     code=code,
-                    defaults={
-                        "name": name,
-                        "is_active": True,
-                    },
+                    defaults={"name": name, "is_active": True},
                 )
 
             for code, name in DEFAULT_TITLES:
                 StaffTitle.objects.get_or_create(
                     facility=self,
                     code=code,
-                    defaults={
-                        "name": name,
-                        "is_active": True,
-                    },
+                    defaults={"name": name, "is_active": True},
                 )
 
-
-# --- 3. CONFIGURATION MODELS ---
+            for gender in DEFAULT_PATIENT_GENDERS:
+                PatientGender.objects.get_or_create(
+                    facility=self,
+                    code=gender["code"],
+                    defaults={
+                        "name": gender["name"],
+                        "sort_order": gender["sort_order"],
+                    },
+                )
 
 
 class AppointmentStatus(models.Model):
@@ -113,8 +110,8 @@ class AppointmentStatus(models.Model):
         on_delete=models.CASCADE,
         related_name="appointment_statuses",
     )
-    name = models.CharField(max_length=50)
     code = models.CharField(max_length=50)
+    name = models.CharField(max_length=50)
     color = ColorField(default="#6c757d")
     is_active = models.BooleanField(default=True)
 
@@ -123,7 +120,7 @@ class AppointmentStatus(models.Model):
         verbose_name_plural = "Appointment Statuses"
 
     def __str__(self):
-        return f"{self.facility.name} - {self.name}"
+        return self.name
 
 
 class AppointmentType(models.Model):
@@ -132,8 +129,8 @@ class AppointmentType(models.Model):
         on_delete=models.CASCADE,
         related_name="appointment_types",
     )
-    name = models.CharField(max_length=50)
     code = models.CharField(max_length=50)
+    name = models.CharField(max_length=50)
     color = ColorField(default="#6f42c1")
     is_active = models.BooleanField(default=True)
 
@@ -141,7 +138,7 @@ class AppointmentType(models.Model):
         unique_together = ("facility", "code")
 
     def __str__(self):
-        return f"{self.facility.name} - {self.name}"
+        return self.name
 
 
 class StaffRole(models.Model):
@@ -150,8 +147,8 @@ class StaffRole(models.Model):
         on_delete=models.CASCADE,
         related_name="roles",
     )
-    name = models.CharField(max_length=50)
     code = models.CharField(max_length=50)
+    name = models.CharField(max_length=50)
     is_system_role = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
 
@@ -159,7 +156,7 @@ class StaffRole(models.Model):
         unique_together = ("facility", "code")
 
     def __str__(self):
-        return f"{self.facility.name} - {self.name}"
+        return self.name
 
 
 class StaffTitle(models.Model):
@@ -168,18 +165,15 @@ class StaffTitle(models.Model):
         on_delete=models.CASCADE,
         related_name="titles",
     )
-    name = models.CharField(max_length=20)
     code = models.CharField(max_length=10)
+    name = models.CharField(max_length=20)
     is_active = models.BooleanField(default=True)
 
     class Meta:
         unique_together = ("facility", "code")
 
     def __str__(self):
-        return f"{self.facility.name} - {self.name}"
-
-
-# --- 4. STAFF MODEL ---
+        return self.name
 
 
 class Staff(models.Model):
@@ -207,8 +201,7 @@ class Staff(models.Model):
         verbose_name_plural = "Staff"
 
     def __str__(self):
-        name = self.user.get_full_name() or self.user.username
-        return f"{name} ({self.role.name}) - {self.facility.name}"
+        return self.user.get_full_name() or self.user.username
 
 
 class PatientGender(models.Model):
@@ -227,4 +220,4 @@ class PatientGender(models.Model):
         ordering = ["sort_order", "name"]
 
     def __str__(self):
-        return f"{self.name} ({self.facility.name})"
+        return self.name

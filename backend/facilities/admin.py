@@ -1,5 +1,8 @@
 from django.contrib import admin
 
+from patients.models import Patient
+from shared.models import Address
+
 from .models import (
     AppointmentStatus,
     AppointmentType,
@@ -11,63 +14,64 @@ from .models import (
 )
 
 
+class PatientInline(admin.TabularInline):
+    model = Patient
+    extra = 1
+    classes = ["collapse"]
+
+
 class StaffInline(admin.TabularInline):
     model = Staff
     extra = 1
+    classes = ["collapse"]
+
+
+class StaffRoleInline(admin.TabularInline):
+    model = StaffRole
+    extra = 0
+    classes = ["collapse"]
+
+
+class StaffTitleInline(admin.TabularInline):
+    model = StaffTitle
+    extra = 0
+    classes = ["collapse"]
+
+
+class AppointmentStatusInline(admin.TabularInline):
+    model = AppointmentStatus
+    extra = 0
+    classes = ["collapse"]
+
+
+class AppointmentTypeInline(admin.TabularInline):
+    model = AppointmentType
+    extra = 0
+    classes = ["collapse"]
+
+
+class PatientGenderInline(admin.TabularInline):
+    model = PatientGender
+    extra = 0
+    classes = ["collapse"]
+
+
+class AddressInline(admin.StackedInline):
+    model = Address
+    extra = 0
 
 
 @admin.register(Facility)
 class FacilityAdmin(admin.ModelAdmin):
-    list_display = ("name", "address", "created_at")
+    list_display = ("name", "address", "timezone", "created_at")
     search_fields = ("name", "address")
-    inlines = [StaffInline]
-
-
-@admin.register(Staff)
-class StaffAdmin(admin.ModelAdmin):
-    list_display = ("user", "facility", "role", "title", "is_active")
-    list_filter = ("facility", "role", "is_active")
-    search_fields = (
-        "user__username",
-        "user__email",
-        "user__first_name",
-        "user__last_name",
-        "role__name",
-        "title__name",
-    )
-
-
-@admin.register(StaffRole)
-class StaffRoleAdmin(admin.ModelAdmin):
-    list_display = ("name", "code", "facility", "is_system_role", "is_active")
-    list_filter = ("facility", "is_system_role", "is_active")
-    search_fields = ("name", "code")
-
-
-@admin.register(StaffTitle)
-class StaffTitleAdmin(admin.ModelAdmin):
-    list_display = ("name", "code", "facility", "is_active")
-    list_filter = ("facility", "is_active")
-    search_fields = ("name", "code")
-
-
-@admin.register(AppointmentStatus)
-class AppointmentStatusAdmin(admin.ModelAdmin):
-    list_display = ("name", "code", "facility", "color", "is_active")
-    list_filter = ("facility", "is_active")
-    search_fields = ("name", "code")
-
-
-@admin.register(AppointmentType)
-class AppointmentTypeAdmin(admin.ModelAdmin):
-    list_display = ("name", "code", "facility", "color", "is_active")
-    list_filter = ("facility", "is_active")
-    search_fields = ("name", "code")
-
-
-@admin.register(PatientGender)
-class PatientGenderAdmin(admin.ModelAdmin):
-    list_display = ("name", "code", "facility", "is_active", "sort_order")
-    list_filter = ("facility", "is_active")
-    search_fields = ("name", "code", "facility__name")
-    ordering = ("facility", "sort_order", "name")
+    readonly_fields = ("created_at",)
+    inlines = [
+        PatientInline,
+        StaffInline,
+        StaffRoleInline,
+        StaffTitleInline,
+        AppointmentStatusInline,
+        AppointmentTypeInline,
+        PatientGenderInline,
+    ]

@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import dayjs from "dayjs";
 import { useForm, Controller } from "react-hook-form";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-import PatientSearchField from "../../patients/components/PatientSearchField";
 import { X } from "lucide-react";
+
+import PatientSearchField from "../../patients/components/PatientSearchField";
 import useDraggableModal from "../../../shared/hooks/useDraggableModal";
+
+import dayjs from "dayjs";
 
 export default function AppointmentModal({
   isOpen,
@@ -199,10 +201,9 @@ export default function AppointmentModal({
                 >
                   <option value="">Select a physician</option>
                   {physicians.map((physician) => (
-                    <option key={physician.id} value={physician.name}>
-                      {physician.title
-                        ? `${physician.title.toUpperCase()} ${physician.name}`
-                        : physician.name}
+                    <option key={physician.id} value={physician.id}>
+                      {physician.title_name ? `${physician.title_name} ` : ""}
+                      {`${physician.user.first_name} ${physician.user.last_name}`}
                     </option>
                   ))}
                 </select>

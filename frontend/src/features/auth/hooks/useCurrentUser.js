@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchCurrentUser } from "../api/facilities";
+import { fetchUserProfile } from "../api/accounts";
 
 export default function useCurrentUser(isAuthenticated) {
   const query = useQuery({
     queryKey: ["currentUser"],
-    queryFn: fetchCurrentUser,
+    queryFn: fetchUserProfile,
     enabled: isAuthenticated,
   });
 

@@ -21,7 +21,7 @@ export function registerUser(data) {
   });
 }
 
-export function fetchMyProfile() {
+export function fetchUserProfile() {
   return apiRequest("/api/accounts/me/", {
     headers: {
       ...getAuthHeaders(),

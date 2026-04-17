@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -16,6 +16,7 @@ from .serializers import (
     AppointmentStatusSerializer,
     AppointmentTypeSerializer,
     StaffRoleSerializer,
+    StaffSerializer,
     StaffTitleSerializer,
 )
 
@@ -42,72 +43,40 @@ def get_active_staff_profile(user):
     )
 
 
-class CurrentUserView(APIView):
-    """
-    Returns data about the logged-in user and their current facility/role.
-    """
+class StaffListView(generics.ListAPIView):
+    serializer_class = StaffSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-    permission_classes = [permissions.AllowAny]
-
-    def get(self, request):
-        user = get_request_user(request)
-        if not user:
-            return Response(
-                {"detail": "Authentication credentials were not provided."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        profile = get_active_staff_profile(user)
-
-        data = {
-            "id": user.id,
-            "username": user.username,
-            "full_name": user.get_full_name() or user.username,
-            "role": profile.role.code if profile and profile.role else None,
-            "facility": (
-                {
-                    "id": profile.facility.id,
-                    "name": profile.facility.name,
-                }
-                if profile and profile.facility
-                else None
-            ),
-        }
-
-        return Response(data)
-
-
-class PhysicianListView(APIView):
-    permission_classes = [permissions.AllowAny]
-
-    def get(self, request):
-        user = get_request_user(request)
+    def get_queryset(self):
+        user = get_request_user(self.request)
         profile = get_active_staff_profile(user)
 
         if not profile:
-            return Response([])
+            return Staff.objects.none()
 
-        physicians = (
-            Staff.objects.filter(
-                facility=profile.facility,
-                role__code="physician",
-                role__is_active=True,
-                is_active=True,
-            )
-            .select_related("user", "title")
-            .order_by("user__last_name", "user__first_name")
+        return (
+            Staff.objects.filter(facility=profile.facility)
+            .select_related("user", "role", "title")
+            .order_by("user__last_name")
         )
 
-        data = [
-            {
-                "id": p.user.id,
-                "name": p.user.get_full_name() or p.user.username,
-                "title": p.title.code if p.title else "",
-            }
-            for p in physicians
-        ]
 
-        return Response(data)
+class PhysicianListView(generics.ListAPIView):
+    serializer_class = StaffSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = get_request_user(self.request)
+        profile = get_active_staff_profile(user)
+
+        if not profile:
+            return Staff.objects.none()
+
+        return Staff.objects.filter(
+            facility=profile.facility,
+            role__code="physician",
+            is_active=True,
+        ).select_related("user", "title")
 
 
 class AppointmentStatusListView(generics.ListAPIView):
@@ -145,10 +114,6 @@ class AppointmentTypeListView(generics.ListAPIView):
 
 
 class StaffRoleListView(generics.ListAPIView):
-    """
-    Lists available active roles for the current facility.
-    """
-
     serializer_class = StaffRoleSerializer
     permission_classes = [permissions.AllowAny]
 

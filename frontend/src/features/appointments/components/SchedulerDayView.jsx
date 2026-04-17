@@ -2,9 +2,12 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import { generateTimeSlots } from "../../../shared/utils/timeSlots";
 import { getTodayLocal, parseLocalDate } from "../../../shared/utils/dateTime";
-import dayjs from "dayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+
+//import { parseISO, addDays } from "date-fns";
+//import { formatInTimeZone, toZonedTime } from "date-fns-tz";
 import AppointmentBlock from "./AppointmentBlock";
+import dayjs from "dayjs";
 
 export default function SchedulerDayView({
   appointments,
