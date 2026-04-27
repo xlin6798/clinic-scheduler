@@ -1,89 +1,150 @@
-# Frontend README
+# CareFlow Frontend
 
-## Overview
+React frontend for CareFlow, an EHR-style clinic workflow demo covering
+scheduling, patient registration, facility administration, and document
+management.
 
-This is the React frontend for Clinic Scheduler. It provides the scheduling UI, patient search and patient detail flows, appointment create/edit forms, and facility-scoped configuration driven by the backend API.
+The app is built to feel like a compact clinical workspace: facility-scoped,
+permission-aware, keyboard-friendly where practical, and organized around
+front-desk and clinical workflows rather than raw database tables.
 
 ## Tech Stack
 
-- React
+- React 19
 - Vite
-- Tailwind CSS
-- Material UI
-- React Query
+- React Router
+- TanStack React Query
+- Tailwind CSS v4 tokens
+- Material UI date pickers
+- React PDF/PDF.js for in-app document previews
 
-## Key Features
+## Product Areas
 
-- Day-view scheduler
-- Drag-and-drop appointment rescheduling
-- Appointment create/edit modal
-- Patient search with debounced filtering
-- Patient create/edit modal
-- React Query for server-state fetching and cache invalidation
-- Feature-based folder structure
+- Schedule workspace with agenda, day, multi-day, and resource-oriented views.
+- Appointment creation/editing with patient search, drag/drop, context actions,
+  activity log, configurable status/type colors, rooms, and resources.
+- Patient workflows with Quick Start registration, smart search, inline Patient
+  Hub registration editing, phone/SSN formatting, insurance, pharmacy, care
+  team, and emergency contacts.
+- Document Center with patient-scoped document lists, uploads, in-app PDF
+  preview, download, category management, and bundled PDF export.
+- Admin areas for organization profile, facilities, staff, roles/permissions,
+  resources, appointment statuses/types, operating hours, document categories,
+  and pharmacy preferences.
+- User preferences for theme, schedule behavior, sidebar startup state,
+  appointment block display, and persisted recent patients.
 
 ## Project Structure
 
 ```text
 src/
-  app/
-    App.jsx
-    providers.jsx
+  app/              App shell, route modules, providers, and error boundary
   features/
-    appointments/
-    auth/
-    facility/
-    patients/
+    admin/          Organization/facility admin surfaces
+    appointments/   Appointment API, modals, blocks, history, mutations
+    auth/           Login, auth provider, current-user flow
+    documents/      Document Center and shared patient document workspace
+    facilities/     Active facility context and facility config hooks
+    patients/       Patient search, Patient Hub, registration, insurance
+    schedule/       Schedule page, grid/agenda/resource views, utilities
   shared/
-    api/
-    components/
-    utils/
+    api/            Versioned API client and auth refresh behavior
+    components/     Navbar, sidebar, shared modals, UI primitives
+    constants/      Navigation, layout, appointment display options
+    context/        Theme and user preference providers
+    hooks/          Shared hooks
+    utils/          Cross-feature helpers
 ```
 
-## Development Setup
-
-### Install dependencies
+## Local Setup
 
 ```bash
 npm install
-```
-
-### Start development server
-
-```bash
 npm run dev
 ```
 
-### Build for production
+The default local API base is `http://localhost:8000`; requests are versioned
+under `/v1`. If the backend is elsewhere, create `frontend/.env.local`:
+
+```bash
+VITE_API_URL=http://localhost:8000
+VITE_APP_URL=http://localhost:5173
+VITE_DEMO_MODE=true
+```
+
+`VITE_API_URL` may include or omit `/v1`; the API client normalizes it.
+
+## Scripts
+
+```bash
+npm run dev
+npm run build
+npm run preview
+npm run lint
+npm run lint:fix
+npm run format:check
+npm run format
+```
+
+For touched frontend source, prefer targeted lint while iterating. Before a
+deploy or larger UI change, run:
 
 ```bash
 npm run build
 ```
 
-### Preview production build
+## API And Auth
 
-```bash
-npm run preview
+- The frontend calls the Django backend through `src/shared/api/client.js`.
+- API routes are automatically prefixed with `/v1`.
+- Access tokens are kept in memory only.
+- Refresh tokens are expected to live in an HTTP-only cookie set by the backend.
+- Requests use `credentials: "include"` so refresh-cookie auth works across the
+  deployed frontend/backend domains.
+- Legacy local-storage auth tokens are cleared by the client.
+
+Current auth endpoints include:
+
+```text
+/v1/users/token/
+/v1/users/token/refresh/
+/v1/users/logout/
+/v1/users/me/
+/v1/users/preferences/
 ```
 
-## Expected Backend
+## UI Notes
 
-The frontend expects the Django backend API to be running and reachable by the configured API client.
+- Prefer shared primitives from `src/shared/components/ui/`.
+- Prefer existing CareFlow tokens/classes from `src/index.css` over one-off
+  colors.
+- Keep clinical screens compact and calm; avoid extra subtitles, wrappers, and
+  hidden overflow unless the component intentionally owns scrolling.
+- For major UI work, inspect the changed flow in Chrome before finalizing.
+- Dev-only visual experiments belong in `frontend/dev-previews/`, which is
+  gitignored.
 
-Common endpoints used by the frontend include:
+## Deployment
 
-- `/api/accounts/token/`
-- `/api/accounts/token/refresh/`
-- `/api/facilities/me/`
-- `/api/facilities/physicians/`
-- `/api/facilities/appointment-statuses/`
-- `/api/facilities/appointment-types/`
-- `/api/facilities/patient-genders/`
-- `/api/scheduler/appointments/`
-- `/api/patients/`
+The production frontend is intended for Vercel. Typical settings:
 
-## Notes
+```text
+Root Directory: frontend
+Build Command: npm run build
+Output Directory: dist
+```
 
-- React Query is used for server state, cache invalidation, and query lifecycle handling.
-- Modal layouts are designed to stay within the available window height and scroll internally on smaller screens.
-- Authentication tokens are stored in local storage in the current implementation.
+Set `VITE_API_URL` to the deployed backend base URL, for example:
+
+```bash
+VITE_API_URL=https://api.careflow.xinyiklin.com
+VITE_APP_URL=https://careflow.xinyiklin.com
+VITE_DEMO_MODE=true
+```
+
+The backend must allow the frontend origin in CORS and CSRF settings.
+
+## Safety
+
+CareFlow uses synthetic demo data only. Do not enter real patient data, PHI,
+tokens, or secrets into local or demo environments.
