@@ -20,7 +20,6 @@ export function AdminFormModal({
   onClose,
   scope,
   title,
-  description = "",
   maxWidth = "2xl",
   formId,
   saving = false,
@@ -34,10 +33,13 @@ export function AdminFormModal({
       onClose={onClose}
       eyebrow={scope}
       title={title}
-      description={description}
+      description=""
       maxWidth={maxWidth}
-      panelClassName="cf-admin-record-modal rounded-[1.55rem] border-cf-border-strong bg-cf-page-bg"
-      bodyClassName="bg-cf-page-bg px-5 py-5"
+      panelClassName={[
+        "cf-admin-record-modal rounded-[1.15rem] border-cf-border-strong bg-cf-surface shadow-[var(--shadow-panel-lg)]",
+        "[&>div:first-child_p]:hidden",
+      ].join(" ")}
+      bodyClassName="bg-cf-page-bg px-4 py-4"
       footerClassName="justify-between bg-cf-surface"
       footer={
         <>
@@ -83,14 +85,16 @@ export function AdminFormSection({ title, children, className = "" }) {
   return (
     <section
       className={joinClasses(
-        "rounded-[1.25rem] border border-cf-border bg-cf-surface shadow-[var(--shadow-panel)]",
+        "overflow-hidden rounded-[1rem] border border-cf-border bg-cf-surface shadow-[var(--shadow-panel)]",
         className
       )}
     >
       {title ? (
-        <h3 className="rounded-t-[1.2rem] border-b border-cf-border bg-cf-surface-soft/45 px-4 py-3 text-sm font-semibold tracking-tight text-cf-text">
-          {title}
-        </h3>
+        <div className="border-b border-cf-border bg-cf-surface-soft/65 px-4 py-2.5">
+          <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-cf-text-subtle">
+            {title}
+          </h3>
+        </div>
       ) : null}
       <div className="px-4 py-4">{children}</div>
     </section>
@@ -104,6 +108,50 @@ export function AdminField({ label, children, className = "" }) {
         {label}
       </label>
       {children}
+    </div>
+  );
+}
+
+export function AdminEditorGrid({ fields, preview }) {
+  return (
+    <div className="overflow-hidden rounded-[1.45rem] border border-cf-border bg-cf-surface shadow-[var(--shadow-panel-lg)]">
+      <div className="grid min-h-0 md:grid-cols-[minmax(0,1fr)_300px]">
+        <div className="min-w-0 space-y-4 bg-cf-surface p-4 md:border-r md:border-cf-border">
+          {fields}
+        </div>
+        <aside className="min-w-0 bg-cf-surface-muted/70 p-4">{preview}</aside>
+      </div>
+    </div>
+  );
+}
+
+export function AdminFieldGrid({ children, columns = 2 }) {
+  const columnClass =
+    columns === 1 ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2";
+
+  return (
+    <div className={["grid gap-4", columnClass].join(" ")}>{children}</div>
+  );
+}
+
+export function AdminModalSummary({ children }) {
+  return (
+    <div className="overflow-hidden rounded-[1rem] border border-cf-border bg-cf-surface-soft/65 px-4 py-3 shadow-[var(--shadow-panel)]">
+      {children}
+    </div>
+  );
+}
+
+export function AdminPreviewRail({ title, children, actions = null }) {
+  return (
+    <div className="grid content-start gap-3 md:sticky md:top-0">
+      {title ? (
+        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cf-text-subtle">
+          {title}
+        </div>
+      ) : null}
+      {children}
+      {actions ? <div className="grid gap-2">{actions}</div> : null}
     </div>
   );
 }
@@ -153,7 +201,7 @@ export function AdminRecordPreview({
   children,
 }) {
   return (
-    <section className="rounded-[1.25rem] border border-cf-border bg-gradient-to-br from-cf-surface to-cf-surface-soft/55 p-4 shadow-[var(--shadow-panel)]">
+    <section className="overflow-hidden rounded-[1.25rem] border border-cf-border bg-cf-surface p-4 shadow-[var(--shadow-panel)] ring-1 ring-black/[0.015]">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex min-w-0 items-start gap-3">
           <span

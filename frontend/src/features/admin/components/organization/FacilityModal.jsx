@@ -1,24 +1,13 @@
 import { useEffect, useState } from "react";
 
-import { Input } from "../../../../shared/components/ui";
+import { AdminFormModal } from "../shared/AdminFormModal";
+import { CompactModalGrid } from "../shared/AdminCompactModal";
 import {
-  AdminField,
-  AdminFormModal,
-  AdminFormSection,
-  AdminToggleField,
-} from "../shared/AdminFormModal";
-import { US_STATE_OPTIONS } from "../../../../shared/constants/usStates";
-
-const OPERATING_DAY_OPTIONS = [
-  { value: 1, label: "Mon" },
-  { value: 2, label: "Tue" },
-  { value: 3, label: "Wed" },
-  { value: 4, label: "Thu" },
-  { value: 5, label: "Fri" },
-  { value: 6, label: "Sat" },
-  { value: 7, label: "Sun" },
-];
-const DEFAULT_OPERATING_DAYS = [1, 2, 3, 4, 5];
+  DEFAULT_OPERATING_DAYS,
+  FacilityDetailsLane,
+  FacilityIdentityLane,
+  OPERATING_DAY_OPTIONS,
+} from "./FacilityModalParts";
 
 const DEFAULT_FORM = {
   name: "",
@@ -59,6 +48,28 @@ function normalizeOperatingDays(value) {
         day >= 1 && day <= 7 && allDays.indexOf(day) === index
     );
   return days.length ? days : DEFAULT_OPERATING_DAYS;
+}
+
+function getFacilityInitials(name) {
+  return (
+    name
+      ?.split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part.charAt(0))
+      .join("")
+      .toUpperCase() || "FC"
+  );
+}
+
+function formatOperatingDays(days) {
+  const normalizedDays = normalizeOperatingDays(days);
+  if (normalizedDays.length === 7) return "Daily";
+  if (normalizedDays.join(",") === "1,2,3,4,5") return "Mon-Fri";
+  return OPERATING_DAY_OPTIONS.filter((option) =>
+    normalizedDays.includes(option.value)
+  )
+    .map((option) => option.label)
+    .join(", ");
 }
 
 export default function FacilityModal({
@@ -163,184 +174,26 @@ export default function FacilityModal({
       onClose={onClose}
       scope="Organization admin"
       title={mode === "edit" ? "Edit Facility" : "New Facility"}
-      description="Maintain facility identity, location, contact, and timezone details."
       maxWidth="4xl"
       formId="facility-form"
       saving={saving}
     >
-      <form id="facility-form" onSubmit={handleSubmit} className="space-y-4">
-        <AdminFormSection title="Identity">
-          <div className="grid gap-4 md:grid-cols-2">
-            <AdminField label="Name">
-              <Input
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-              />
-            </AdminField>
-            <AdminField label="Facility Code">
-              <Input
-                name="facility_code"
-                value={formData.facility_code}
-                onChange={handleChange}
-              />
-            </AdminField>
-            <AdminField label="Timezone" className="md:col-span-2">
-              <Input
-                name="timezone"
-                value={formData.timezone}
-                onChange={handleChange}
-                required
-              />
-            </AdminField>
-          </div>
-        </AdminFormSection>
-
-        <AdminFormSection title="Schedule">
-          <div className="grid gap-4 md:grid-cols-2">
-            <AdminField label="Start Time">
-              <Input
-                type="time"
-                name="operating_start_time"
-                value={formData.operating_start_time}
-                onChange={handleChange}
-                required
-              />
-            </AdminField>
-            <AdminField label="End Time">
-              <Input
-                type="time"
-                name="operating_end_time"
-                value={formData.operating_end_time}
-                onChange={handleChange}
-                required
-              />
-            </AdminField>
-          </div>
-          <div className="mt-4">
-            <div className="mb-2 text-xs font-medium uppercase tracking-[0.14em] text-cf-text-subtle">
-              Operating Days
-            </div>
-            <div className="grid grid-cols-7 gap-2">
-              {OPERATING_DAY_OPTIONS.map((day) => {
-                const isSelected = formData.operating_days.includes(day.value);
-
-                return (
-                  <button
-                    key={day.value}
-                    type="button"
-                    onClick={() => handleOperatingDayToggle(day.value)}
-                    className={[
-                      "rounded-xl border px-2 py-2 text-sm font-semibold transition",
-                      isSelected
-                        ? "border-cf-accent bg-cf-accent text-white"
-                        : "border-cf-border bg-cf-surface-muted text-cf-text-muted hover:border-cf-border-strong hover:text-cf-text",
-                    ].join(" ")}
-                    aria-pressed={isSelected}
-                  >
-                    {day.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </AdminFormSection>
-
-        <AdminFormSection title="Contact">
-          <div className="grid gap-4 md:grid-cols-3">
-            <AdminField label="Phone">
-              <Input
-                name="phone_number"
-                value={formData.phone_number}
-                onChange={handleChange}
-              />
-            </AdminField>
-            <AdminField label="Fax">
-              <Input
-                name="fax_number"
-                value={formData.fax_number}
-                onChange={handleChange}
-              />
-            </AdminField>
-            <AdminField label="Email">
-              <Input
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-              />
-            </AdminField>
-          </div>
-        </AdminFormSection>
-
-        <AdminFormSection title="Address">
-          <div className="grid gap-4 md:grid-cols-2">
-            <AdminField label="Address Line 1" className="md:col-span-2">
-              <Input
-                name="line_1"
-                value={formData.address.line_1}
-                onChange={handleAddressChange}
-              />
-            </AdminField>
-            <AdminField label="Address Line 2" className="md:col-span-2">
-              <Input
-                name="line_2"
-                value={formData.address.line_2}
-                onChange={handleAddressChange}
-              />
-            </AdminField>
-            <AdminField label="City">
-              <Input
-                name="city"
-                value={formData.address.city}
-                onChange={handleAddressChange}
-              />
-            </AdminField>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <AdminField label="State">
-                <Input
-                  as="select"
-                  name="state"
-                  value={formData.address.state}
-                  onChange={handleAddressChange}
-                >
-                  {US_STATE_OPTIONS.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </Input>
-              </AdminField>
-              <AdminField label="ZIP Code">
-                <Input
-                  name="zip_code"
-                  value={formData.address.zip_code}
-                  onChange={handleAddressChange}
-                />
-              </AdminField>
-            </div>
-          </div>
-        </AdminFormSection>
-
-        <AdminFormSection title="Notes">
-          <div className="space-y-4">
-            <Input
-              as="textarea"
-              name="notes"
-              value={formData.notes}
-              onChange={handleChange}
-              rows={4}
-              placeholder="Optional notes for admins and operations"
-            />
-            <AdminToggleField
-              label="Active"
-              name="is_active"
-              checked={formData.is_active}
-              onChange={handleChange}
-            />
-          </div>
-        </AdminFormSection>
+      <form id="facility-form" onSubmit={handleSubmit}>
+        <CompactModalGrid>
+          <FacilityIdentityLane
+            formData={formData}
+            initials={getFacilityInitials(formData.name)}
+            daysLabel={formatOperatingDays(formData.operating_days)}
+            onChange={handleChange}
+            onDayToggle={handleOperatingDayToggle}
+          />
+          <FacilityDetailsLane
+            formData={formData}
+            daysLabel={formatOperatingDays(formData.operating_days)}
+            onChange={handleChange}
+            onAddressChange={handleAddressChange}
+          />
+        </CompactModalGrid>
       </form>
     </AdminFormModal>
   );

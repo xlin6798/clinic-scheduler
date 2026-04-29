@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 
 import { Badge, Input } from "../../../../shared/components/ui";
+import { normalizeSecurityPermissions } from "../../constants/securityPermissions";
+import { AdminFormModal } from "../shared/AdminFormModal";
 import {
-  SECURITY_PERMISSION_GROUPS,
-  normalizeSecurityPermissions,
-} from "../../constants/securityPermissions";
-import {
-  AdminField,
-  AdminFormModal,
-  AdminFormSection,
-  AdminToggleField,
-} from "../shared/AdminFormModal";
+  AccessMetric,
+  CompactField,
+  SecurityOverrideBoard,
+  getInitialsFromName,
+  getOverrideStats,
+  getPermissionSummary,
+} from "./StaffModalParts";
 
 const DEFAULT_FORM = {
   user_id: "",
@@ -20,35 +20,11 @@ const DEFAULT_FORM = {
   security_overrides: {},
 };
 
-const HIGH_IMPACT_PERMISSION_KEYS = new Set([
-  "schedule.delete",
-  "patients.delete",
-  "documents.categories.manage",
-  "pharmacies.manage",
-  "admin.facility.manage",
-]);
-
-function getPermissionItems() {
-  return SECURITY_PERMISSION_GROUPS.flatMap((group) =>
-    group.permissions.map((permission) => ({
-      ...permission,
-      groupLabel: group.label,
-    }))
-  );
-}
-
-function getPermissionSummary(permissions) {
-  const items = getPermissionItems();
-  const allowed = items.filter((permission) => permissions[permission.key]);
-  const highImpact = allowed.filter((permission) =>
-    HIGH_IMPACT_PERMISSION_KEYS.has(permission.key)
-  );
-
-  return {
-    allowed,
-    highImpact,
-    total: items.length,
-  };
+function getUserDisplayName(user) {
+  if (!user) return "Select user";
+  return user.first_name || user.last_name
+    ? `${user.first_name || ""} ${user.last_name || ""}`.trim()
+    : user.username;
 }
 
 export default function StaffModal({
@@ -129,6 +105,16 @@ export default function StaffModal({
     ...(formData.security_overrides || {}),
   };
   const permissionSummary = getPermissionSummary(effectivePermissions);
+  const selectedUser =
+    users.find((user) => String(user.id) === String(formData.user_id)) ||
+    initialValues?.user;
+  const hasSelectedUserOption = users.some(
+    (user) => String(user.id) === String(selectedUser?.id)
+  );
+  const title = titles.find(
+    (candidate) => String(candidate.id) === String(formData.title_id)
+  );
+  const overrideStats = getOverrideStats(formData.security_overrides);
 
   return (
     <AdminFormModal
@@ -136,188 +122,179 @@ export default function StaffModal({
       onClose={onClose}
       scope="Facility admin"
       title={isEditMode ? `Edit ${recordLabel}` : `New ${recordLabel}`}
-      description="Assign a user to this facility and manage their operational role and access exceptions."
-      maxWidth="xl"
+      maxWidth="4xl"
       formId="staff-form"
       saving={saving}
       deleteLabel={isEditMode && onDelete ? `Remove ${recordLabel}` : ""}
       onDelete={isEditMode ? onDelete : undefined}
     >
-      <form id="staff-form" onSubmit={handleSubmit} className="space-y-4">
-        <AdminFormSection title="Membership">
-          <div className="grid gap-4 md:grid-cols-2">
-            <AdminField label="User" className="md:col-span-2">
-              <Input
-                as="select"
-                name="user_id"
-                value={formData.user_id}
-                onChange={handleChange}
-                required
-                disabled={isEditMode}
-              >
-                <option value="">Select user</option>
-                {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.first_name || user.last_name
-                      ? `${user.first_name || ""} ${user.last_name || ""}`.trim()
-                      : user.username}
-                  </option>
-                ))}
-              </Input>
-              {isEditMode && (
-                <p className="mt-1 text-xs text-cf-text-subtle">
-                  User cannot be changed after the staff membership is created.
-                </p>
-              )}
-            </AdminField>
-
-            <AdminField label="Role">
-              <Input
-                as="select"
-                name="role_id"
-                value={formData.role_id}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Select role</option>
-                {roles.map((role) => (
-                  <option key={role.id} value={role.id}>
-                    {role.name}
-                  </option>
-                ))}
-              </Input>
-            </AdminField>
-
-            <AdminField label="Title">
-              <Input
-                as="select"
-                name="title_id"
-                value={formData.title_id}
-                onChange={handleChange}
-              >
-                <option value="">No title</option>
-                {titles.map((title) => (
-                  <option key={title.id} value={title.id}>
-                    {title.name}
-                  </option>
-                ))}
-              </Input>
-            </AdminField>
-          </div>
-        </AdminFormSection>
-
-        <AdminFormSection title="Access State">
-          <div className="grid gap-3">
-            <AdminToggleField
-              label="Active"
-              name="is_active"
-              checked={formData.is_active}
-              onChange={handleChange}
-            />
-          </div>
-        </AdminFormSection>
-
-        {role ? (
-          <AdminFormSection title="Access Preview">
-            <div className="rounded-2xl border border-cf-border bg-cf-surface-soft/55 px-4 py-3">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <div className="text-sm font-semibold text-cf-text">
-                    {permissionSummary.allowed.length} of{" "}
-                    {permissionSummary.total} permissions allowed
-                  </div>
-                  <p className="mt-1 text-xs leading-5 text-cf-text-muted">
-                    Effective access combines the selected role with the
-                    security overrides below.
-                  </p>
+      <form
+        id="staff-form"
+        onSubmit={handleSubmit}
+        className="grid gap-3 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]"
+      >
+        <section className="space-y-3">
+          <div className="rounded-[1.15rem] border border-cf-border bg-cf-surface p-3 shadow-[var(--shadow-panel)]">
+            <div className="flex items-center gap-3">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-cf-border bg-cf-surface-soft text-sm font-bold text-cf-text">
+                {getInitialsFromName(
+                  getUserDisplayName(selectedUser),
+                  recordLabel.slice(0, 2)
+                )}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-base font-semibold text-cf-text">
+                  {getUserDisplayName(selectedUser)}
                 </div>
-                <Badge
-                  variant={
-                    permissionSummary.highImpact.length ? "warning" : "muted"
-                  }
-                >
-                  {permissionSummary.highImpact.length
-                    ? `${permissionSummary.highImpact.length} high-impact`
-                    : "No high-impact access"}
-                </Badge>
+                <div className="mt-0.5 truncate text-sm text-cf-text-muted">
+                  {role?.name || "No role"} · {title?.name || recordLabel}
+                </div>
               </div>
-
-              {permissionSummary.highImpact.length ? (
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {permissionSummary.highImpact.map((permission) => (
-                    <Badge key={permission.key} variant="outline">
-                      {permission.label}
-                    </Badge>
-                  ))}
-                </div>
-              ) : null}
+              <label className="flex shrink-0 items-center gap-2 rounded-full border border-cf-border bg-cf-page-bg px-2.5 py-1 text-xs font-semibold text-cf-text-muted">
+                <input
+                  type="checkbox"
+                  name="is_active"
+                  checked={formData.is_active}
+                  onChange={handleChange}
+                  className="h-3.5 w-3.5 accent-[var(--color-cf-accent)]"
+                />
+                Active
+              </label>
             </div>
-          </AdminFormSection>
-        ) : null}
+          </div>
+
+          <div className="rounded-[1.15rem] border border-cf-border bg-cf-surface p-3 shadow-[var(--shadow-panel)]">
+            <div className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-cf-text-subtle">
+              Membership
+            </div>
+            <div className="grid gap-3">
+              <CompactField label="User">
+                <Input
+                  as="select"
+                  name="user_id"
+                  value={formData.user_id}
+                  onChange={handleChange}
+                  required
+                  disabled={isEditMode}
+                >
+                  <option value="">Select user</option>
+                  {selectedUser && !hasSelectedUserOption ? (
+                    <option value={selectedUser.id}>
+                      {getUserDisplayName(selectedUser)}
+                    </option>
+                  ) : null}
+                  {users.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.first_name || user.last_name
+                        ? `${user.first_name || ""} ${user.last_name || ""}`.trim()
+                        : user.username}
+                    </option>
+                  ))}
+                </Input>
+              </CompactField>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <CompactField label="Role">
+                  <Input
+                    as="select"
+                    name="role_id"
+                    value={formData.role_id}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">Select role</option>
+                    {roles.map((role) => (
+                      <option key={role.id} value={role.id}>
+                        {role.name}
+                      </option>
+                    ))}
+                  </Input>
+                </CompactField>
+
+                <CompactField label="Title">
+                  <Input
+                    as="select"
+                    name="title_id"
+                    value={formData.title_id}
+                    onChange={handleChange}
+                  >
+                    <option value="">No title</option>
+                    {titles.map((title) => (
+                      <option key={title.id} value={title.id}>
+                        {title.name}
+                      </option>
+                    ))}
+                  </Input>
+                </CompactField>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[1.15rem] border border-cf-border bg-cf-surface p-3 shadow-[var(--shadow-panel)]">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cf-text-subtle">
+                  Access snapshot
+                </div>
+                <div className="text-base font-semibold text-cf-text">
+                  {role?.name || "Role required"}
+                </div>
+              </div>
+              <Badge
+                variant={
+                  permissionSummary.highImpact.length ? "warning" : "muted"
+                }
+              >
+                {permissionSummary.highImpact.length} high-impact
+              </Badge>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              <AccessMetric
+                label="Allowed"
+                value={`${permissionSummary.allowed.length}/${permissionSummary.total}`}
+              />
+              <AccessMetric label="Custom" value={overrideStats.total} />
+              <AccessMetric label="Blocked" value={overrideStats.blocked} />
+            </div>
+
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-cf-border">
+              <div
+                className="h-full rounded-full bg-cf-accent"
+                style={{
+                  width: `${Math.round(
+                    (permissionSummary.allowed.length /
+                      Math.max(permissionSummary.total, 1)) *
+                      100
+                  )}%`,
+                }}
+              />
+            </div>
+
+            {permissionSummary.highImpact.length ? (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {permissionSummary.highImpact.map((permission) => (
+                  <Badge key={permission.key} variant="outline">
+                    {permission.label}
+                  </Badge>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </section>
 
         {isEditMode ? (
-          <AdminFormSection title="Security Overrides">
-            <div className="space-y-4">
-              {SECURITY_PERMISSION_GROUPS.map((group) => (
-                <div key={group.key}>
-                  <div className="text-xs font-semibold uppercase tracking-[0.14em] text-cf-text-subtle">
-                    {group.label}
-                  </div>
-                  <div className="mt-2 grid gap-2">
-                    {group.permissions.map((permission) => {
-                      const overrideValue =
-                        formData.security_overrides?.[permission.key];
-                      const selectValue =
-                        overrideValue === true
-                          ? "grant"
-                          : overrideValue === false
-                            ? "revoke"
-                            : "inherit";
-
-                      return (
-                        <label
-                          key={permission.key}
-                          className="grid gap-2 rounded-xl border border-cf-border bg-cf-surface-soft/55 px-3 py-3 sm:grid-cols-[1fr_9rem] sm:items-center"
-                        >
-                          <span>
-                            <span className="block text-sm font-medium text-cf-text">
-                              {permission.label}
-                            </span>
-                            <span className="mt-0.5 block text-xs text-cf-text-subtle">
-                              Role default:{" "}
-                              {inheritedPermissions[permission.key]
-                                ? "Allowed"
-                                : "Blocked"}
-                              . Effective:{" "}
-                              {effectivePermissions[permission.key]
-                                ? "Allowed"
-                                : "Blocked"}
-                              .
-                            </span>
-                          </span>
-                          <Input
-                            as="select"
-                            value={selectValue}
-                            onChange={(event) =>
-                              handleSecurityOverrideChange(
-                                permission.key,
-                                event.target.value
-                              )
-                            }
-                          >
-                            <option value="inherit">Inherit</option>
-                            <option value="grant">Allow</option>
-                            <option value="revoke">Block</option>
-                          </Input>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </AdminFormSection>
-        ) : null}
+          <SecurityOverrideBoard
+            inheritedPermissions={inheritedPermissions}
+            effectivePermissions={effectivePermissions}
+            securityOverrides={formData.security_overrides}
+            onChange={handleSecurityOverrideChange}
+          />
+        ) : (
+          <section className="rounded-[1.15rem] border border-dashed border-cf-border bg-cf-surface-soft/45 p-5 text-sm font-medium text-cf-text-muted">
+            Overrides unlock after the member is saved.
+          </section>
+        )}
       </form>
     </AdminFormModal>
   );

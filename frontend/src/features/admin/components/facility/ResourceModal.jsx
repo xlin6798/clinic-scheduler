@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
 
-import { Input } from "../../../../shared/components/ui";
+import { Button, Input } from "../../../../shared/components/ui";
+import { AdminFormModal } from "../shared/AdminFormModal";
 import {
-  AdminField,
-  AdminFormModal,
-  AdminRecordPreview,
-  AdminFormSection,
-  AdminToggleField,
-} from "../shared/AdminFormModal";
+  CompactCard,
+  CompactField,
+  CompactMetric,
+  CompactModalGrid,
+  CompactModalLane,
+  CompactPill,
+  CompactRecordHeader,
+  CompactToggle,
+} from "../shared/AdminCompactModal";
 import {
   getResourceHoursLabel,
   getResourceRoomLabel,
@@ -85,91 +89,128 @@ export default function ResourceModal({
       onClose={onClose}
       scope="Facility admin"
       title={mode === "edit" ? "Edit Resource" : "New Resource"}
-      description="Define a schedulable lane such as a physician, room, lab, or follow-up resource."
       formId="resource-form"
       saving={saving}
       deleteLabel={mode === "edit" && onDelete ? "Deactivate" : ""}
       onDelete={mode === "edit" ? onDelete : undefined}
+      maxWidth="3xl"
     >
-      <form id="resource-form" onSubmit={handleSubmit} className="grid gap-4">
-        <AdminRecordPreview
-          eyebrow="Schedule resource"
-          title={formData.name || "Unnamed resource"}
-          description={
-            formData.is_active
-              ? "Available for schedule lanes"
-              : "Hidden from active scheduling"
-          }
-          meta={[mode === "edit" ? "Existing record" : "New record"]}
-          color="#3b82f6"
-        >
-          <div className="grid gap-2 text-sm text-cf-text-muted sm:grid-cols-2">
-            <span className="rounded-xl border border-cf-border bg-cf-surface px-3 py-2">
-              Room · {getResourceRoomLabel(formData)}
-            </span>
-            <span className="rounded-xl border border-cf-border bg-cf-surface px-3 py-2">
-              {getResourceHoursLabel(formData, facility)}
-            </span>
-          </div>
-        </AdminRecordPreview>
-
-        <AdminFormSection title="Resource Details">
-          <div className="space-y-4">
-            <AdminField label="Name">
-              <Input
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Lab, Follow-up, Dr. Jane Smith, Exam Room 1"
-                required
+      <form id="resource-form" onSubmit={handleSubmit}>
+        <CompactModalGrid>
+          <CompactModalLane>
+            <CompactCard>
+              <CompactRecordHeader
+                initials={(formData.name || "RS").slice(0, 2).toUpperCase()}
+                title={formData.name || "Unnamed resource"}
+                meta={`Room · ${getResourceRoomLabel(formData)}`}
+                action={
+                  <CompactToggle
+                    label="Active"
+                    name="is_active"
+                    checked={formData.is_active}
+                    onChange={handleChange}
+                  />
+                }
               />
-            </AdminField>
+            </CompactCard>
 
-            <AdminField label="Default room">
-              <Input
-                name="default_room"
-                value={formData.default_room}
-                onChange={handleChange}
-                placeholder="Any room"
-              />
-            </AdminField>
+            <CompactCard eyebrow="Resource">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <CompactField label="Name">
+                  <Input
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                  />
+                </CompactField>
+                <CompactField label="Default room">
+                  <Input
+                    name="default_room"
+                    value={formData.default_room}
+                    onChange={handleChange}
+                  />
+                </CompactField>
+              </div>
+            </CompactCard>
 
-            <AdminToggleField
-              label="Active"
-              name="is_active"
-              checked={formData.is_active}
-              onChange={handleChange}
-            />
-          </div>
-        </AdminFormSection>
+            <CompactCard eyebrow="Hours">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <CompactField label="Start">
+                  <Input
+                    type="time"
+                    name="operating_start_time"
+                    value={formData.operating_start_time}
+                    onChange={handleChange}
+                  />
+                </CompactField>
+                <CompactField label="End">
+                  <Input
+                    type="time"
+                    name="operating_end_time"
+                    value={formData.operating_end_time}
+                    onChange={handleChange}
+                  />
+                </CompactField>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-cf-border bg-cf-surface-soft/55 px-3 py-2 text-sm font-semibold text-cf-text-muted">
+                <span>{getResourceHoursLabel(formData, facility)}</span>
+                <Button
+                  variant="default"
+                  size="sm"
+                  type="button"
+                  onClick={handleUseFacilityHours}
+                >
+                  Use facility hours
+                </Button>
+              </div>
+            </CompactCard>
+          </CompactModalLane>
 
-        <AdminFormSection title="Hours">
-          <div className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-            <AdminField label="Start time">
-              <Input
-                type="time"
-                name="operating_start_time"
-                value={formData.operating_start_time}
-                onChange={handleChange}
+          <CompactCard eyebrow="Preview" title="Resource lane">
+            <div className="rounded-[1.1rem] border border-cf-border bg-cf-surface-soft/55 p-3">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-sm font-semibold text-cf-text">
+                    {formData.name || "Resource"}
+                  </div>
+                  <div className="mt-1 text-xs font-semibold text-cf-text-muted">
+                    {getResourceRoomLabel(formData)}
+                  </div>
+                </div>
+                <CompactPill tone={formData.is_active ? "success" : "muted"}>
+                  {formData.is_active ? "Active" : "Inactive"}
+                </CompactPill>
+              </div>
+              <div className="grid grid-cols-[4rem_1fr] gap-2 text-xs">
+                {["08:00", "09:00", "10:00"].map((time) => (
+                  <div key={time} className="contents">
+                    <span className="pt-2 font-semibold text-cf-text-subtle">
+                      {time}
+                    </span>
+                    <span className="rounded-lg border border-cf-border bg-cf-surface px-3 py-2 font-semibold text-cf-text-muted">
+                      Open
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <CompactMetric
+                label="Room"
+                value={formData.default_room || "—"}
               />
-            </AdminField>
-            <AdminField label="End time">
-              <Input
-                type="time"
-                name="operating_end_time"
-                value={formData.operating_end_time}
-                onChange={handleChange}
+              <CompactMetric
+                label="Hours"
+                value={
+                  formData.operating_start_time || formData.operating_end_time
+                    ? "Custom"
+                    : "Facility"
+                }
               />
-            </AdminField>
-            <button
-              type="button"
-              onClick={handleUseFacilityHours}
-              className="rounded-xl border border-cf-border bg-cf-surface px-3 py-2.5 text-sm font-semibold text-cf-text-muted transition hover:bg-cf-surface-soft hover:text-cf-text"
-            >
-              Use facility hours
-            </button>
-          </div>
-        </AdminFormSection>
+            </div>
+          </CompactCard>
+        </CompactModalGrid>
       </form>
     </AdminFormModal>
   );

@@ -1,23 +1,11 @@
 import { useEffect, useState } from "react";
 
-import { Badge, Input } from "../../../../shared/components/ui";
+import { AdminFormModal } from "../shared/AdminFormModal";
+import { CompactModalGrid } from "../shared/AdminCompactModal";
 import {
-  AdminField,
-  AdminFormModal,
-  AdminFormSection,
-  AdminToggleField,
-} from "../shared/AdminFormModal";
-import { US_STATE_OPTIONS } from "../../../../shared/constants/usStates";
-
-const SERVICE_TYPE_OPTIONS = [
-  { value: "retail", label: "Retail" },
-  { value: "mail_order", label: "Mail Order" },
-  { value: "specialty", label: "Specialty" },
-  { value: "ltc", label: "Long-Term Care" },
-  { value: "dme", label: "DME" },
-  { value: "home_infusion", label: "Home Infusion" },
-  { value: "other", label: "Other" },
-];
+  PharmacyDetailsLane,
+  PharmacyDirectoryLane,
+} from "./OrganizationPharmacyModalParts";
 const EMPTY_ADDRESS = {
   line_1: "",
   line_2: "",
@@ -76,7 +64,6 @@ function getDirectoryMeta(initialValues) {
   return {
     sourceLabel,
     statusLabel,
-    sourceName: pharmacy.directory_source || "Future directory",
   };
 }
 
@@ -194,228 +181,25 @@ export default function OrganizationPharmacyModal({
       onClose={onClose}
       scope="Organization admin"
       title={mode === "edit" ? "Edit Pharmacy" : "Add Pharmacy"}
-      description="Create or refine an organization pharmacy record for intake, prescriptions, and future directory sync."
       maxWidth="3xl"
       formId="organization-pharmacy-form"
       saving={saving}
       deleteLabel={onDeactivate ? "Deactivate" : ""}
       onDelete={onDeactivate}
     >
-      <form
-        id="organization-pharmacy-form"
-        onSubmit={handleSubmit}
-        className="space-y-4"
-      >
-        <AdminFormSection title="Directory Record">
-          <div className="mb-4 rounded-2xl border border-cf-border bg-cf-surface-soft/55 px-4 py-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="muted">{directoryMeta.sourceLabel} record</Badge>
-              <Badge variant="outline">{directoryMeta.statusLabel}</Badge>
-            </div>
-            <p className="mt-2 text-xs leading-5 text-cf-text-muted">
-              This record is managed locally today and keeps identifiers ready
-              for future reconciliation with {directoryMeta.sourceName}.
-            </p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            <AdminField label="Display Name" className="md:col-span-2">
-              <Input
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-              />
-            </AdminField>
-            <AdminField label="Legal Business Name" className="md:col-span-2">
-              <Input
-                name="legal_business_name"
-                value={formData.legal_business_name}
-                onChange={handleChange}
-              />
-            </AdminField>
-            <AdminField label="Phone">
-              <Input
-                name="phone_number"
-                value={formData.phone_number}
-                onChange={handleChange}
-              />
-            </AdminField>
-            <AdminField label="Fax">
-              <Input
-                name="fax_number"
-                value={formData.fax_number}
-                onChange={handleChange}
-              />
-            </AdminField>
-          </div>
-        </AdminFormSection>
-
-        <AdminFormSection title="E-Prescribing">
-          <div className="grid gap-4 md:grid-cols-2">
-            <AdminField label="NCPDP ID">
-              <Input
-                name="ncpdp_id"
-                value={formData.ncpdp_id}
-                onChange={handleChange}
-                maxLength={7}
-                inputMode="numeric"
-                pattern="\d{7}"
-              />
-            </AdminField>
-            <AdminField label="NPI">
-              <Input
-                name="npi"
-                value={formData.npi}
-                onChange={handleChange}
-                maxLength={10}
-                inputMode="numeric"
-                pattern="\d{10}"
-              />
-            </AdminField>
-            <AdminField label="DEA Number">
-              <Input
-                name="dea_number"
-                value={formData.dea_number}
-                onChange={handleChange}
-                maxLength={9}
-                className="uppercase"
-              />
-            </AdminField>
-            <AdminField label="Store Number">
-              <Input
-                name="store_number"
-                value={formData.store_number}
-                onChange={handleChange}
-              />
-            </AdminField>
-            <AdminField label="Tax ID">
-              <Input
-                name="tax_id"
-                value={formData.tax_id}
-                onChange={handleChange}
-              />
-            </AdminField>
-            <AdminField label="Service Type">
-              <Input
-                as="select"
-                name="service_type"
-                value={formData.service_type}
-                onChange={handleChange}
-              >
-                {SERVICE_TYPE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </Input>
-            </AdminField>
-            <div className="grid gap-3 md:col-span-2 sm:grid-cols-2">
-              <AdminToggleField
-                label="Accepts eRx"
-                name="accepts_erx"
-                checked={formData.accepts_erx}
-                onChange={handleChange}
-              />
-              <AdminToggleField
-                label="24-hour location"
-                name="is_24_hour"
-                checked={formData.is_24_hour}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-        </AdminFormSection>
-
-        <AdminFormSection title="Address">
-          <div className="grid gap-4 md:grid-cols-2">
-            <AdminField label="Address Line 1" className="md:col-span-2">
-              <Input
-                name="line_1"
-                value={formData.address.line_1}
-                onChange={handleAddressChange}
-              />
-            </AdminField>
-            <AdminField label="Address Line 2" className="md:col-span-2">
-              <Input
-                name="line_2"
-                value={formData.address.line_2}
-                onChange={handleAddressChange}
-              />
-            </AdminField>
-            <AdminField label="City">
-              <Input
-                name="city"
-                value={formData.address.city}
-                onChange={handleAddressChange}
-              />
-            </AdminField>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <AdminField label="State">
-                <Input
-                  as="select"
-                  name="state"
-                  value={formData.address.state}
-                  onChange={handleAddressChange}
-                >
-                  {US_STATE_OPTIONS.map((state) => (
-                    <option key={state} value={state}>
-                      {state}
-                    </option>
-                  ))}
-                </Input>
-              </AdminField>
-              <AdminField label="ZIP Code">
-                <Input
-                  name="zip_code"
-                  value={formData.address.zip_code}
-                  onChange={handleAddressChange}
-                />
-              </AdminField>
-            </div>
-          </div>
-        </AdminFormSection>
-
-        <AdminFormSection title="Organization Settings">
-          <div className="grid gap-4 md:grid-cols-[1fr_10rem]">
-            <AdminField label="Notes">
-              <Input
-                as="textarea"
-                name="notes"
-                value={formData.notes}
-                onChange={handleChange}
-                rows={4}
-              />
-            </AdminField>
-            <AdminField label="Sort Order">
-              <Input
-                type="number"
-                name="sort_order"
-                value={formData.sort_order}
-                onChange={handleChange}
-              />
-            </AdminField>
-            <div className="grid gap-3 md:col-span-2 sm:grid-cols-3">
-              <AdminToggleField
-                label="Preferred"
-                name="is_preferred"
-                checked={formData.is_preferred}
-                onChange={handleChange}
-              />
-              <AdminToggleField
-                label="Hidden"
-                name="is_hidden"
-                checked={formData.is_hidden}
-                onChange={handleChange}
-              />
-              <AdminToggleField
-                label="Active"
-                name="is_active"
-                checked={formData.is_active}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-        </AdminFormSection>
+      <form id="organization-pharmacy-form" onSubmit={handleSubmit}>
+        <CompactModalGrid>
+          <PharmacyDirectoryLane
+            formData={formData}
+            directoryMeta={directoryMeta}
+            onChange={handleChange}
+          />
+          <PharmacyDetailsLane
+            formData={formData}
+            onChange={handleChange}
+            onAddressChange={handleAddressChange}
+          />
+        </CompactModalGrid>
       </form>
     </AdminFormModal>
   );
