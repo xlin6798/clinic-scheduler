@@ -2,7 +2,11 @@ import { IdCard, Mail } from "lucide-react";
 
 import { FieldError, FieldHint, FormLabel as Label } from "./PatientFormFields";
 import { Button, Input, Panel } from "../../../shared/components/ui";
-import { validatePhoneNumber, validateSsn } from "../utils/contactValidation";
+import {
+  PHONE_INPUT_PLACEHOLDER,
+  validatePhoneNumber,
+  validateSsn,
+} from "../utils/contactValidation";
 
 export function PatientIdentityPanel({
   errors,
@@ -12,6 +16,7 @@ export function PatientIdentityPanel({
   register,
   registerSsnField,
   shouldEditSsn,
+  ssnHint,
   showFullSsn,
 }) {
   return (
@@ -102,7 +107,8 @@ export function PatientIdentityPanel({
                 <FieldError error={errors.ssn} />
               ) : (
                 <FieldHint>
-                  Full SSN is only fetched when you reveal it.
+                  {ssnHint ||
+                    "Masked by default; reveal only to verify or replace."}
                 </FieldHint>
               )}
             </div>
@@ -137,7 +143,7 @@ export function PatientContactPanel({
             <Input
               type="text"
               inputMode="numeric"
-              placeholder="(555)555-1234"
+              placeholder={PHONE_INPUT_PLACEHOLDER}
               {...registerPhoneField("phone_cell", {
                 validate: (value, values) => {
                   const phoneError = validatePhoneNumber(value);
@@ -165,7 +171,7 @@ export function PatientContactPanel({
             <Input
               type="text"
               inputMode="numeric"
-              placeholder="(555)555-1234"
+              placeholder={PHONE_INPUT_PLACEHOLDER}
               {...registerPhoneField("phone_home", {
                 validate: (value) => validatePhoneNumber(value) || true,
               })}
@@ -178,7 +184,7 @@ export function PatientContactPanel({
             <Input
               type="text"
               inputMode="numeric"
-              placeholder="(555)555-1234"
+              placeholder={PHONE_INPUT_PLACEHOLDER}
               {...registerPhoneField("phone_work", {
                 validate: (value) => validatePhoneNumber(value) || true,
               })}

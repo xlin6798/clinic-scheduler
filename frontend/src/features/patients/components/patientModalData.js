@@ -1,3 +1,5 @@
+import { getPrimaryPatientPhoneDisplay } from "../utils/contactValidation";
+
 export const SEX_AT_BIRTH_OPTIONS = [
   { value: "", label: "Not specified" },
   { value: "female", label: "Female" },
@@ -130,12 +132,21 @@ export function getMaskedSsn(fullSsn, fallbackLast4) {
   return last4 ? `***-**-${last4}` : "Not recorded";
 }
 
+function getMiddleInitial(value) {
+  const trimmed = String(value || "").trim();
+  return trimmed ? `${trimmed.charAt(0).toUpperCase()}.` : "";
+}
+
 export function getPatientName(values, patient) {
   const firstName = values?.first_name?.trim() || patient?.first_name || "";
+  const middleName = values?.middle_name?.trim() || patient?.middle_name || "";
   const lastName = values?.last_name?.trim() || patient?.last_name || "";
   const preferredName =
     values?.preferred_name?.trim() || patient?.preferred_name || "";
-  const displayName = [lastName, firstName].filter(Boolean).join(", ");
+  const givenName = [firstName, getMiddleInitial(middleName)]
+    .filter(Boolean)
+    .join(" ");
+  const displayName = [lastName, givenName].filter(Boolean).join(", ");
 
   if (displayName && preferredName) return `${displayName} · ${preferredName}`;
   return displayName || preferredName || "New patient";
@@ -158,12 +169,7 @@ export function getPatientInitials(values, patient) {
 }
 
 export function getPrimaryPhone(values) {
-  return (
-    values?.phone_cell?.trim() ||
-    values?.phone_home?.trim() ||
-    values?.phone_work?.trim() ||
-    ""
-  );
+  return getPrimaryPatientPhoneDisplay(values);
 }
 
 export function getAddressPreview(values) {

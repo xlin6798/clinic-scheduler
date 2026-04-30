@@ -49,7 +49,7 @@ export function getAppointmentSpan(appointment, intervalMinutes) {
 export function getSlotRowHeight(intervalMinutes) {
   if (intervalMinutes <= 5) return 32;
   if (intervalMinutes <= 10) return 36;
-  if (intervalMinutes <= 15) return 42;
+  if (intervalMinutes <= 15) return 46;
   if (intervalMinutes <= 20) return 46;
   if (intervalMinutes <= 30) return 52;
   return 62;

@@ -115,6 +115,7 @@ export function PatientFlowProvider({
           <PatientHubModal
             isOpen={patientFlow.hub.isOpen}
             patientId={patientFlow.hub.patientId}
+            initialTab={patientFlow.hub.initialTab}
             onClose={patientFlow.hub.close}
           />
         </Suspense>

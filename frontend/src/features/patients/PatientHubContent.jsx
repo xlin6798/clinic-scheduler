@@ -1,6 +1,6 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CircleUserRound } from "lucide-react";
+import { CircleUserRound, X } from "lucide-react";
 import useFacility from "../facilities/hooks/useFacility";
 import useFacilityConfig from "../facilities/hooks/useFacilityConfig";
 import { fetchPatientById } from "./api/patients";
@@ -18,10 +18,7 @@ import useAppointmentFlow from "../appointments/hooks/useAppointmentFlow";
 import useAppointmentMutations from "../appointments/hooks/useAppointmentMutations";
 import PatientDocumentsWorkspace from "../documents/components/PatientDocumentsWorkspace";
 import InsurancePolicyModal from "./components/InsurancePolicyModal";
-import PatientIdentitySidebar, {
-  getPatientChartName,
-  getPrimaryPhone,
-} from "./components/PatientHubSidebar";
+import PatientIdentitySidebar from "./components/PatientHubSidebar";
 import {
   AppointmentsTab,
   buildAppointmentPatientSnapshot,
@@ -40,8 +37,19 @@ import {
 import ConfirmDialog from "../../shared/components/ConfirmDialog";
 import { Panel } from "../../shared/components/ui";
 import { getTodayInTimeZone } from "../../shared/utils/dateTime";
+import { getPatientChartName } from "./utils/patientDisplay";
 
-export function PatientHubContent({ patientId }) {
+function getSafeInitialTab(initialTab) {
+  return HUB_TABS.some((tab) => tab.key === initialTab)
+    ? initialTab
+    : "registration";
+}
+
+export function PatientHubContent({
+  patientId,
+  initialTab = "registration",
+  onClose,
+}) {
   const queryClient = useQueryClient();
   const { selectedFacilityId, facility, selectedMembership } = useFacility();
   const {
@@ -55,7 +63,9 @@ export function PatientHubContent({ patientId }) {
     typeOptions,
   } = useFacilityConfig();
 
-  const [activeTab, setActiveTab] = useState("registration");
+  const [activeTab, setActiveTab] = useState(() =>
+    getSafeInitialTab(initialTab)
+  );
   const canManageDocumentCategories = Boolean(
     selectedMembership?.effective_security_permissions?.[
       "documents.categories.manage"
@@ -91,6 +101,10 @@ export function PatientHubContent({ patientId }) {
     typeOptions,
     selectedDate: appointmentSelectedDate,
   });
+
+  useEffect(() => {
+    setActiveTab(getSafeInitialTab(initialTab));
+  }, [initialTab, patientId]);
 
   const patientQuery = useQuery({
     queryKey: [
@@ -189,7 +203,6 @@ export function PatientHubContent({ patientId }) {
 
   const patient = patientQuery.data || null;
   const patientName = patient ? getPatientChartName(patient) : "Patient";
-  const primaryPhone = getPrimaryPhone(patient);
   const emergencyContacts = useMemo(() => {
     const contacts = Array.isArray(patient?.emergency_contacts)
       ? patient.emergency_contacts
@@ -401,18 +414,12 @@ export function PatientHubContent({ patientId }) {
     setHistoryModalState({
       isOpen: true,
       appointmentId: appointmentFlow.modal.editingId,
-      patientName:
-        appointmentFlow.selectedPatient?.display_name ||
-        appointmentFlow.selectedPatient?.full_name ||
-        patientName ||
-        "",
+      patientName: patientName || "",
       appointmentTime: appointmentFlow.modal.formData.appointment_time,
     });
   }, [
     appointmentFlow.modal.editingId,
     appointmentFlow.modal.formData.appointment_time,
-    appointmentFlow.selectedPatient?.display_name,
-    appointmentFlow.selectedPatient?.full_name,
     patientName,
   ]);
 
@@ -556,24 +563,33 @@ export function PatientHubContent({ patientId }) {
           <PatientIdentitySidebar
             patient={patient}
             patientName={patientName}
-            primaryPhone={primaryPhone}
             insurancePolicies={insurancePolicies}
             appointmentGroups={appointmentGroups}
           />
         ) : null}
 
         <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          <div className="flex-none overflow-x-auto border-b border-cf-border bg-cf-surface pr-16">
-            <div className="flex items-end gap-0 px-4 whitespace-nowrap">
-              {HUB_TABS.map((tab) => (
-                <TabButton
-                  key={tab.key}
-                  tab={tab}
-                  isActive={activeTab === tab.key}
-                  onClick={setActiveTab}
-                />
-              ))}
+          <div className="flex flex-none items-stretch border-b border-cf-border bg-cf-surface">
+            <div className="min-w-0 flex-1 overflow-x-auto">
+              <div className="flex items-end gap-0 px-4 whitespace-nowrap">
+                {HUB_TABS.map((tab) => (
+                  <TabButton
+                    key={tab.key}
+                    tab={tab}
+                    isActive={activeTab === tab.key}
+                    onClick={setActiveTab}
+                  />
+                ))}
+              </div>
             </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="mr-4 mt-3 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-cf-border bg-cf-surface text-cf-text-subtle shadow-sm transition hover:bg-cf-surface-muted hover:text-cf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cf-accent/25"
+              aria-label="Close patient hub"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
 
           <div

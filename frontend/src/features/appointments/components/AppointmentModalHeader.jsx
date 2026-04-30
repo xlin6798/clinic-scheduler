@@ -1,7 +1,6 @@
 import { History, X } from "lucide-react";
 
 import { Button } from "../../../shared/components/ui";
-import { formatTimeInTimeZone } from "../../../shared/utils/dateTime";
 
 function getAppointmentInitials(patientDisplayName) {
   return (patientDisplayName || "AP")
@@ -21,9 +20,7 @@ export default function AppointmentModalHeader({
   formData,
   appointmentHeaderDate,
   appointmentHeaderTime,
-  computedEndTime,
-  timeZone,
-  durationMinutes,
+  appointmentHeaderEndTime,
   selectedResource,
   providerDisplayName,
   selectedStatusOption,
@@ -31,18 +28,25 @@ export default function AppointmentModalHeader({
   onOpenHistory,
   onClose,
 }) {
+  const resourceDisplayName = selectedResource?.name || "No resource";
+  const normalizedResourceName = resourceDisplayName.trim().toLowerCase();
+  const normalizedProviderName = providerDisplayName?.trim().toLowerCase();
+  const showProvider =
+    Boolean(normalizedProviderName) &&
+    normalizedProviderName !== normalizedResourceName;
+
   return (
     <div
       {...dragHandleProps}
-      className="flex cursor-move flex-wrap items-center justify-between gap-4 border-b border-cf-border bg-gradient-to-b from-cf-surface to-cf-surface-soft/40 px-7 py-5 select-none"
+      className="flex cursor-move flex-wrap items-center justify-between gap-3 border-b border-cf-border bg-cf-surface px-5 py-4 select-none"
     >
-      <div className="flex min-w-0 items-center gap-4">
+      <div className="flex min-w-0 items-center gap-3">
         <div className="relative">
-          <div className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 text-base font-semibold text-blue-900 ring-1 ring-blue-200/70">
+          <div className="grid h-11 w-11 place-items-center rounded-xl border border-cf-border bg-cf-surface-muted text-sm font-semibold text-cf-text">
             {getAppointmentInitials(patientDisplayName)}
           </div>
           {selectedPatient ? (
-            <span className="absolute -right-0.5 -bottom-0.5 grid h-5 w-5 place-items-center rounded-full bg-emerald-500 text-white ring-2 ring-cf-surface">
+            <span className="absolute -right-0.5 -bottom-0.5 grid h-[1.125rem] w-[1.125rem] place-items-center rounded-full bg-cf-accent text-[10px] font-bold text-cf-page-bg ring-2 ring-cf-surface">
               ✓
             </span>
           ) : null}
@@ -57,24 +61,19 @@ export default function AppointmentModalHeader({
             </span>
           </div>
           <div className="mt-0.5 min-w-0">
-            <h2 className="min-w-0 truncate text-2xl font-semibold tracking-tight text-cf-text">
+            <h2 className="min-w-0 truncate text-xl font-semibold tracking-tight text-cf-text">
               {patientDisplayName || "Appointment"}
             </h2>
-            <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-cf-text-muted">
+            <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 text-sm text-cf-text-muted">
               <span>
                 {appointmentHeaderDate} · {appointmentHeaderTime}
-                {computedEndTime
-                  ? ` - ${formatTimeInTimeZone(
-                      computedEndTime,
-                      timeZone,
-                      "h:mm a"
-                    )}`
+                {appointmentHeaderEndTime
+                  ? ` - ${appointmentHeaderEndTime}`
                   : ""}
-                {durationMinutes ? ` (${durationMinutes} min)` : ""}
               </span>
               <span className="text-cf-border-strong">·</span>
-              <span>{selectedResource?.name || "No resource"}</span>
-              {providerDisplayName ? (
+              <span>{resourceDisplayName}</span>
+              {showProvider ? (
                 <>
                   <span className="text-cf-border-strong">·</span>
                   <span>{providerDisplayName}</span>
@@ -117,7 +116,7 @@ export default function AppointmentModalHeader({
           type="button"
           onPointerDown={(event) => event.stopPropagation()}
           onClick={onClose}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-cf-text-subtle transition hover:bg-cf-surface hover:text-cf-text"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-cf-text-subtle transition hover:bg-cf-surface-muted hover:text-cf-text"
           aria-label="Close"
         >
           <X className="h-5 w-5" />

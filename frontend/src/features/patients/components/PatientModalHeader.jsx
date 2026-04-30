@@ -1,58 +1,34 @@
-import { Check, UserRound, X } from "lucide-react";
-
-import { Badge } from "../../../shared/components/ui";
-import { getPrimaryPhone } from "./patientModalData";
+import { UserRound, X } from "lucide-react";
 
 export default function PatientModalHeader({
-  completionPercent,
   dragHandleProps,
   mode,
   onClose,
-  patient,
   patientInitials,
-  patientName,
-  watchedValues,
 }) {
+  const title =
+    mode === "edit" ? "Patient Registration" : "New Patient Registration";
+
   return (
     <div
       {...dragHandleProps}
-      className="flex cursor-move select-none items-center justify-between gap-4 border-b border-cf-border bg-gradient-to-br from-cf-surface via-cf-surface to-cf-surface-muted/75 px-5 py-5 sm:px-6"
+      className="flex cursor-move select-none items-center justify-between gap-4 border-b border-cf-border bg-cf-surface px-5 py-4 sm:px-6"
     >
       <div className="flex min-w-0 items-center gap-4">
-        <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 text-base font-semibold tracking-[0.12em] text-blue-900 ring-1 ring-blue-200/70">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-cf-border bg-cf-surface-soft text-sm font-semibold tracking-[0.08em] text-cf-text-muted">
           {mode === "edit" ? (
             patientInitials
           ) : (
             <UserRound className="h-5 w-5" />
           )}
-          <span className="absolute -right-0.5 -bottom-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white ring-2 ring-cf-surface">
-            <Check className="h-3 w-3" />
-          </span>
         </div>
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-cf-text-subtle">
-            {mode === "edit"
-              ? "Registration · Patient record"
-              : "Registration · New patient"}
-            <span className="font-mono tracking-tight text-cf-text-muted">
-              {patient?.chart_number || "MRN pending"}
-            </span>
+          <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-cf-text-subtle">
+            Registration
           </div>
-          <div className="mt-1 flex min-w-0 flex-col gap-1.5">
-            <h2 className="truncate text-2xl font-semibold tracking-tight text-cf-text">
-              {patientName}
-            </h2>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-cf-text-muted">
-              <span>{watchedValues?.date_of_birth || "DOB pending"}</span>
-              <span className="text-cf-border-strong">·</span>
-              <span>{getPrimaryPhone(watchedValues) || "Phone pending"}</span>
-              <span className="text-cf-border-strong">·</span>
-              <span>{completionPercent}% intake ready</span>
-              {mode === "edit" && patient?.is_active === false ? (
-                <Badge variant="warning">Inactive</Badge>
-              ) : null}
-            </div>
-          </div>
+          <h2 className="truncate text-lg font-semibold text-cf-text">
+            {title}
+          </h2>
         </div>
       </div>
 

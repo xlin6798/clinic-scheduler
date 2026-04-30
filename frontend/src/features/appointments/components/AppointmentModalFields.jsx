@@ -17,7 +17,7 @@ export function FieldLabel({ children, required = false }) {
 
 export function FormSection({ icon: Icon, title, description, children }) {
   return (
-    <section className="border-t border-cf-border px-7 py-6 first:border-t-0">
+    <section className="border-t border-cf-border px-5 py-4 first:border-t-0">
       <div className="flex items-start gap-2">
         {Icon ? <Icon className="mt-0.5 h-4 w-4 text-cf-text-subtle" /> : null}
         <div>
@@ -30,18 +30,18 @@ export function FormSection({ icon: Icon, title, description, children }) {
         </div>
       </div>
 
-      <div className="mt-4">{children}</div>
+      <div className="mt-3">{children}</div>
     </section>
   );
 }
 
 export function SummaryItem({ label, value, swatchColor = null }) {
   return (
-    <div className="rounded-xl border border-cf-border bg-cf-surface px-3 py-3">
+    <div className="border-t border-cf-border/80 py-2 first:border-t-0">
       <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-cf-text-subtle">
         {label}
       </div>
-      <div className="mt-1 flex min-h-5 items-center gap-2 text-sm font-medium text-cf-text">
+      <div className="mt-0.5 flex min-h-5 items-center gap-2 text-sm font-medium text-cf-text">
         {swatchColor ? (
           <span
             className="h-2.5 w-2.5 shrink-0 rounded-full"
@@ -62,11 +62,17 @@ export function ChipPicker({
   required = false,
   error = "",
   getMeta = null,
+  singleRow = false,
 }) {
   return (
     <div>
       <FieldLabel required={required}>{label}</FieldLabel>
-      <div className="flex flex-wrap gap-2">
+      <div
+        className={[
+          "flex gap-2",
+          singleRow ? "overflow-x-auto pb-1" : "flex-wrap",
+        ].join(" ")}
+      >
         {options.map((option) => {
           const isActive = String(option.id) === String(value);
           const color = option.color || "var(--color-cf-accent)";
@@ -78,12 +84,11 @@ export function ChipPicker({
               type="button"
               onClick={() => onChange(option.id)}
               className={[
-                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition",
+                "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-xs transition",
+                singleRow ? "shrink-0" : "",
                 isActive
-                  ? label === "Status"
-                    ? "border-2 border-amber-500 bg-amber-50 font-semibold text-amber-900 shadow-[var(--shadow-panel)]"
-                    : "border-2 border-cf-text bg-cf-text font-semibold text-white shadow-[var(--shadow-panel)]"
-                  : "border-cf-border bg-cf-surface font-medium text-cf-text-muted hover:bg-cf-surface-soft",
+                  ? "border-cf-accent bg-cf-accent font-semibold text-cf-page-bg shadow-[var(--shadow-panel)]"
+                  : "border-cf-border bg-cf-surface font-medium text-cf-text-muted hover:bg-cf-surface-soft hover:text-cf-text",
               ].join(" ")}
             >
               <span
@@ -112,7 +117,7 @@ export function PatientMetaItem({
   return (
     <div
       className={[
-        "min-w-0 rounded-xl border border-cf-border bg-cf-surface-muted/55 px-3 py-2",
+        "min-w-0 border-t border-cf-border/80 py-2 first:border-t-0",
         className,
       ].join(" ")}
     >

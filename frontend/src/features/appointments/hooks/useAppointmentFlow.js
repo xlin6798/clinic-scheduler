@@ -113,8 +113,11 @@ export default function useAppointmentFlow({
       if ((mode === "edit" || mode === "duplicate") && appointment) {
         setSelectedPatient({
           id: appointment.patient_id,
-          full_name: appointment.patient_name,
-          display_name: appointment.patient_name,
+          first_name: appointment.patient_first_name || "",
+          middle_name: appointment.patient_middle_name || "",
+          last_name: appointment.patient_last_name || "",
+          preferred_name: appointment.patient_preferred_name || "",
+          patient_name: appointment.patient_name || "",
           date_of_birth: appointment.patient_date_of_birth || "",
           chart_number: appointment.patient_chart_number || "",
         });

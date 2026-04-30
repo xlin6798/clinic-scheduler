@@ -20,6 +20,7 @@ import {
   SCHEDULE_QUICK_ACTION_EVENT,
   SCHEDULE_QUICK_ACTION_STORAGE_KEY,
 } from "../../../shared/constants/quickActions";
+import { getPatientChartName } from "../../patients/utils/patientDisplay";
 
 export default function SchedulePage() {
   const { facility, selectedFacilityId } = useFacility();
@@ -285,11 +286,9 @@ export default function SchedulePage() {
       isOpen: true,
       appointmentId: appointment?.id || appointmentFlow.modal.editingId,
       patientName:
-        appointment?.patient_name ||
-        appointmentFlow.selectedPatient?.display_name ||
-        appointmentFlow.selectedPatient?.full_name ||
-        appointmentFlow.selectedPatient?.patient_name ||
-        null,
+        (appointment
+          ? getPatientChartName(appointment, appointment.patient_name)
+          : getPatientChartName(appointmentFlow.selectedPatient, "")) || null,
       appointmentTime:
         appointment?.appointment_time ||
         appointmentFlow.modal.formData.appointment_time,

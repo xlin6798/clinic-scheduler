@@ -2,15 +2,18 @@ import { AlertTriangle, ClipboardList, Pencil, Pill, Plus } from "lucide-react";
 
 import { Badge, Button } from "../../../shared/components/ui";
 import { formatCoverageOrder, formatDateTime } from "./PatientHubSections";
-import { getPatientChartName } from "./PatientHubSidebar";
+import {
+  getPatientChartName,
+  getPatientFullName,
+} from "../utils/patientDisplay";
 
 export function buildAppointmentPatientSnapshot(patient) {
   if (!patient) return null;
 
   return {
     id: patient.id,
-    full_name: patient.full_name || getPatientChartName(patient),
-    display_name: patient.display_name || getPatientChartName(patient),
+    full_name: getPatientFullName(patient),
+    display_name: getPatientChartName(patient),
     date_of_birth: patient.date_of_birth || "",
     chart_number: patient.chart_number || "",
   };
@@ -118,7 +121,7 @@ export function EmptyClinicalTab({
             className={[
               "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border text-cf-text-subtle",
               variant === "warning"
-                ? "border-amber-200 bg-amber-50 text-amber-600 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-400"
+                ? "border-cf-warning-text/35 bg-cf-warning-bg text-cf-warning-text"
                 : "border-cf-border bg-cf-surface-soft",
             ].join(" ")}
           >

@@ -2,6 +2,7 @@ import { CalendarDays, Hash, Mail, Phone } from "lucide-react";
 
 import { Badge } from "../../../shared/components/ui";
 import { formatDOB } from "../../../shared/utils/dateTime";
+import { getPrimaryPatientPhoneDisplay } from "../utils/contactValidation";
 import {
   getPatientDobMrn,
   getPatientInitials,
@@ -58,6 +59,8 @@ export function PatientSearchResultCard({
   onOpen,
   actions,
 }) {
+  const primaryPhone = getPrimaryPatientPhoneDisplay(patient);
+
   return (
     <button
       type="button"
@@ -94,13 +97,15 @@ export function PatientSearchResultCard({
             </span>
             <span className="inline-flex min-w-0 items-center gap-1.5">
               <Phone className="h-3.5 w-3.5 shrink-0 text-cf-text-subtle" />
-              <span className="truncate">
-                {patient.primary_phone_number || "—"}
+              <span className="truncate" title={primaryPhone || undefined}>
+                {primaryPhone || "—"}
               </span>
             </span>
             <span className="inline-flex min-w-0 items-center gap-1.5">
               <Mail className="h-3.5 w-3.5 shrink-0 text-cf-text-subtle" />
-              <span className="truncate">{patient.email || "—"}</span>
+              <span className="truncate" title={patient.email || undefined}>
+                {patient.email || "—"}
+              </span>
             </span>
           </div>
         </div>

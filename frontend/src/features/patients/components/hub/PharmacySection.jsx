@@ -31,6 +31,7 @@ export default function PharmacySection({
     <RegistrationSectionShell
       icon={Pill}
       title="Preferred pharmacy"
+      bodyClassName="px-3.5 py-2.5"
       badge={
         selectedPharmacy?.accepts_erx ? (
           <Badge variant="success">eRx accepted</Badge>
@@ -46,6 +47,7 @@ export default function PharmacySection({
         }
         displayValue={displayName}
         emptyHint="No preferred pharmacy"
+        compact
         onSave={(next) =>
           onSavePartial({
             preferred_pharmacy: next ? Number(next) : null,
@@ -54,15 +56,15 @@ export default function PharmacySection({
       />
 
       {selectedPharmacy ? (
-        <div className="mt-3 space-y-1 rounded-xl border border-cf-border bg-cf-surface-muted/55 px-3 py-2 text-xs text-cf-text-muted">
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-cf-border bg-cf-surface-muted/55 px-2.5 py-1.5 text-[11px] leading-4 text-cf-text-muted">
           {selectedPharmacy.phone_number ? (
-            <div>
-              <span className="text-cf-text-subtle">Phone · </span>
+            <div className="min-w-fit">
+              <span className="text-cf-text-subtle">Phone </span>
               {selectedPharmacy.phone_number}
             </div>
           ) : null}
           {selectedPharmacy.address ? (
-            <div className="leading-snug">
+            <div className="min-w-0 flex-1 truncate">
               {formatAddress(selectedPharmacy.address)}
             </div>
           ) : null}

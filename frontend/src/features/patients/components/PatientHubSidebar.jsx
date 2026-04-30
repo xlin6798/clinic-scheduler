@@ -2,30 +2,16 @@ import { Mail, Phone } from "lucide-react";
 
 import { formatCoverageOrder, formatDateTime } from "./PatientHubSections";
 import { formatDOB } from "../../../shared/utils/dateTime";
-
-export function getPatientChartName(patient) {
-  const firstName = patient?.preferred_name || patient?.first_name;
-  return [patient?.last_name, firstName].filter(Boolean).join(", ");
-}
+import {
+  formatPhoneDisplay,
+  formatPhoneEntryDisplay,
+  getPatientPhoneEntries,
+  getPrimaryPatientPhoneDisplay,
+} from "../utils/contactValidation";
+import { getPatientInitials } from "../utils/patientDisplay";
 
 export function getPrimaryPhone(patient) {
-  return (
-    patient?.primary_phone_number ||
-    patient?.phones?.find((phone) => phone.label === "cell")?.number ||
-    patient?.phones?.find((phone) => phone.label === "home")?.number ||
-    patient?.phones?.find((phone) => phone.label === "work")?.number ||
-    ""
-  );
-}
-
-function getPatientInitials(patient) {
-  return (
-    [patient?.first_name, patient?.last_name]
-      .map((part) => (part || "").charAt(0))
-      .join("")
-      .slice(0, 2)
-      .toUpperCase() || "PT"
-  );
+  return getPrimaryPatientPhoneDisplay(patient);
 }
 
 function SidebarFact({ icon: Icon = null, prefix = null, value }) {
@@ -40,7 +26,10 @@ function SidebarFact({ icon: Icon = null, prefix = null, value }) {
           {prefix}
         </span>
       )}
-      <span className="truncate text-[var(--color-cf-sidebar-text)]">
+      <span
+        className="min-w-0 truncate text-[var(--color-cf-sidebar-text)] select-text"
+        title={String(value)}
+      >
         {value}
       </span>
     </div>
@@ -61,12 +50,13 @@ function SidebarSection({ title, children }) {
 export default function PatientIdentitySidebar({
   patient,
   patientName,
-  primaryPhone,
   insurancePolicies,
   appointmentGroups,
 }) {
   const nextVisit = appointmentGroups.upcoming[0] || null;
   const pronouns = patient.pronouns || patient.gender_name || "";
+  const emergencyPhone = formatPhoneDisplay(patient.emergency_contact_phone);
+  const phoneEntries = getPatientPhoneEntries(patient);
 
   return (
     <aside
@@ -82,7 +72,10 @@ export default function PatientIdentitySidebar({
             {getPatientInitials(patient)}
           </div>
           <div className="min-w-0">
-            <div className="truncate text-sm font-semibold text-[var(--color-cf-sidebar-accent)]">
+            <div
+              className="truncate text-sm font-semibold text-[var(--color-cf-sidebar-accent)] select-text"
+              title={patientName}
+            >
               {patientName}
             </div>
             <div className="text-[11px] text-[var(--color-cf-sidebar-text-muted)]">
@@ -109,7 +102,13 @@ export default function PatientIdentitySidebar({
               patient.date_of_birth ? formatDOB(patient.date_of_birth) : ""
             }
           />
-          <SidebarFact icon={Phone} value={primaryPhone} />
+          {phoneEntries.map((phone) => (
+            <SidebarFact
+              key={`${phone.label}-${phone.number}`}
+              icon={Phone}
+              value={formatPhoneEntryDisplay(phone)}
+            />
+          ))}
           <SidebarFact icon={Mail} value={patient.email} />
         </div>
       </div>
@@ -178,14 +177,21 @@ export default function PatientIdentitySidebar({
           patient.emergency_contact_relationship ||
           patient.emergency_contact_phone ? (
             <div className="rounded-lg bg-white/[0.06] px-2.5 py-2">
-              <div className="truncate text-[11px] font-semibold text-[var(--color-cf-sidebar-text)]">
+              <div
+                className="truncate text-[11px] font-semibold text-[var(--color-cf-sidebar-text)] select-text"
+                title={patient.emergency_contact_name || undefined}
+              >
                 {patient.emergency_contact_name || "Emergency contact"}
               </div>
-              <div className="truncate text-[11px] text-[var(--color-cf-sidebar-text-muted)]">
-                {[
-                  patient.emergency_contact_relationship,
-                  patient.emergency_contact_phone,
-                ]
+              <div
+                className="truncate text-[11px] text-[var(--color-cf-sidebar-text-muted)] select-text"
+                title={
+                  [patient.emergency_contact_relationship, emergencyPhone]
+                    .filter(Boolean)
+                    .join(" · ") || undefined
+                }
+              >
+                {[patient.emergency_contact_relationship, emergencyPhone]
                   .filter(Boolean)
                   .join(" · ")}
               </div>

@@ -1,10 +1,6 @@
 import PatientSearchField from "../../patients/components/PatientSearchField";
 import { formatDOB } from "../../../shared/utils/dateTime";
-import {
-  PatientMetaItem,
-  ReadOnlyValueField,
-  SummaryItem,
-} from "./AppointmentModalFields";
+import { PatientMetaItem, SummaryItem } from "./AppointmentModalFields";
 
 export default function AppointmentPatientLens({
   selectedPatient,
@@ -19,13 +15,26 @@ export default function AppointmentPatientLens({
   recentPatients,
   patientDetailsQuery,
   errors,
-  patientPhone,
+  patientPhones,
   patientAddress,
   insurancePoliciesQuery,
   primaryInsurancePolicy,
 }) {
+  const isPatientLoading = patientDetailsQuery.isLoading;
+  const dobValue = patientSnapshot.date_of_birth
+    ? formatDOB(patientSnapshot.date_of_birth)
+    : "";
+  const mrnValue = patientSnapshot.chart_number || "";
+  const hasPatientIdentity = Boolean(selectedPatient || dobValue || mrnValue);
+  const patientMeta = hasPatientIdentity
+    ? [
+        dobValue ? `DOB ${dobValue}` : "DOB pending",
+        mrnValue ? `MRN ${mrnValue}` : "MRN pending",
+      ].join(" · ")
+    : "Select a patient to view demographics";
+
   return (
-    <aside className="min-h-0 overflow-y-auto border-b border-cf-border bg-gradient-to-b from-cf-surface-soft/60 to-cf-surface px-6 py-6 lg:order-2 lg:border-b-0 lg:border-l">
+    <aside className="min-h-0 overflow-y-auto border-b border-cf-border bg-cf-page-bg px-4 py-4 lg:order-2 lg:border-b-0 lg:border-l">
       <div className="flex items-center justify-between">
         <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-cf-text-subtle">
           Patient lens
@@ -41,27 +50,17 @@ export default function AppointmentPatientLens({
         ) : null}
       </div>
 
-      <div className="mt-3 space-y-5">
-        <section className="rounded-2xl border border-cf-border bg-cf-surface p-4 shadow-[var(--shadow-panel)]">
-          <div className="flex items-center justify-between">
-            <div className="text-sm font-semibold text-cf-text">
-              {patientDisplayName || "No patient selected"}
-            </div>
-            <span className="font-mono text-[11px] tracking-tight text-cf-text-subtle">
-              {patientSnapshot.chart_number || "MRN pending"}
-            </span>
+      <div className="mt-3 space-y-4">
+        <section>
+          <div className="text-sm font-semibold text-cf-text">
+            {patientDisplayName || "No patient selected"}
           </div>
-          <div className="mt-1 text-xs text-cf-text-muted">
-            {patientSnapshot.gender ? `${patientSnapshot.gender} · ` : ""}
-            {patientSnapshot.date_of_birth
-              ? `DOB ${formatDOB(patientSnapshot.date_of_birth)}`
-              : "DOB pending"}
+          <div className="mt-1 text-xs font-medium text-cf-text-muted">
+            {isPatientLoading ? "Loading patient..." : patientMeta}
           </div>
 
-          <div className="mt-4">
-            {mode === "edit" ? (
-              <ReadOnlyValueField value={patientDisplayName} />
-            ) : (
+          <div className="mt-3">
+            {mode !== "edit" ? (
               <PatientSearchField
                 facilityId={facilityId}
                 selectedPatient={selectedPatient}
@@ -70,46 +69,27 @@ export default function AppointmentPatientLens({
                 onOpenCreatePatient={onOpenCreatePatient}
                 recentPatients={recentPatients}
               />
-            )}
+            ) : null}
 
-            {selectedPatient || patientDetailsQuery.isLoading ? (
+            {selectedPatient || isPatientLoading ? (
               <div className="mt-3">
-                <div className="grid grid-cols-2 gap-2">
-                  <PatientMetaItem
-                    label="DOB"
-                    value={
-                      patientDetailsQuery.isLoading
-                        ? "Loading..."
-                        : patientSnapshot.date_of_birth
-                          ? formatDOB(patientSnapshot.date_of_birth)
-                          : ""
-                    }
-                  />
-                  <PatientMetaItem
-                    label="MRN"
-                    value={
-                      patientDetailsQuery.isLoading
-                        ? "Loading..."
-                        : patientSnapshot.chart_number
-                    }
-                  />
-                </div>
+                {isPatientLoading ? (
+                  <PatientMetaItem label="Phone" value="Loading..." />
+                ) : patientPhones.length ? (
+                  patientPhones.map((phone) => (
+                    <PatientMetaItem
+                      key={`${phone.label}-${phone.number}`}
+                      label={`${phone.labelTitle} phone`}
+                      value={phone.formattedNumber}
+                    />
+                  ))
+                ) : (
+                  <PatientMetaItem label="Phone" value="" />
+                )}
                 <PatientMetaItem
-                  className="mt-2"
-                  label="Phone"
-                  value={
-                    patientDetailsQuery.isLoading ? "Loading..." : patientPhone
-                  }
-                />
-                <PatientMetaItem
-                  className="mt-2"
                   label="Address"
                   multiline
-                  value={
-                    patientDetailsQuery.isLoading
-                      ? "Loading..."
-                      : patientAddress
-                  }
+                  value={isPatientLoading ? "Loading..." : patientAddress}
                 />
               </div>
             ) : null}
@@ -126,7 +106,7 @@ export default function AppointmentPatientLens({
           <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.14em] text-cf-text-subtle">
             <span>Primary insurance</span>
             {primaryInsurancePolicy ? (
-              <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
+              <span className="rounded-full bg-cf-accent-soft px-2 py-0.5 text-[10px] font-semibold text-cf-text ring-1 ring-cf-border">
                 Active
               </span>
             ) : null}

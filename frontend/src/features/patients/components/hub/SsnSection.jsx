@@ -8,6 +8,7 @@ import { getErrorMessage } from "../../../../shared/utils/errors";
 import {
   formatSsnInput,
   getDigits,
+  getSsnInputDigits,
   handleFormattedInputDeletion,
   validateSsn,
 } from "../../utils/contactValidation";
@@ -61,7 +62,14 @@ export default function SsnSection({ patient, facilityId, onSavePartial }) {
     try {
       setStatus("loading");
       const response = await revealPatientSsn(patient.id, facilityId);
-      const nextSsn = response?.ssn || "";
+      const nextSsn = getSsnInputDigits(response?.ssn || "");
+      if (nextSsn.length !== 9) {
+        setDraft("");
+        setIsEditing(true);
+        setError("Stored full SSN is unavailable; enter a replacement.");
+        return;
+      }
+
       setLoadedSsn(nextSsn);
       setDraft(formatSsnInput(nextSsn));
       setIsEditing(true);

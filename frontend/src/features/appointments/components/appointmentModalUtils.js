@@ -1,16 +1,15 @@
 import { toFacilityDateTime } from "../../../shared/utils/dateTime";
+import { getPatientChartName } from "../../patients/utils/patientDisplay";
 
 export function getPatientDisplayName(selectedPatient) {
   if (!selectedPatient) return "";
 
-  const fallbackName = `${selectedPatient.last_name || ""}, ${
-    selectedPatient.first_name || ""
-  }`
-    .replace(/^,\s*/, "")
-    .trim();
-
-  return (
-    selectedPatient.display_name || selectedPatient.full_name || fallbackName
+  return getPatientChartName(
+    selectedPatient,
+    selectedPatient.patient_name ||
+      selectedPatient.full_name ||
+      selectedPatient.display_name ||
+      ""
   );
 }
 

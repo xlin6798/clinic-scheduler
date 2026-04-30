@@ -3,9 +3,11 @@ import { Plus, Siren, Star, Trash2 } from "lucide-react";
 
 import { Badge, Button, Input } from "../../../../shared/components/ui";
 import {
+  formatPhoneDisplay,
   formatPhoneInput,
   getPhoneInputDigits,
   handleFormattedInputDeletion,
+  PHONE_INPUT_PLACEHOLDER,
   validatePhoneNumber,
 } from "../../utils/contactValidation";
 import InlineEditField from "./InlineEditField";
@@ -119,9 +121,12 @@ function ContactRow({
           label="Phone"
           value={contact.phone_number}
           displayValue={
-            contact.phone_number ? formatPhoneInput(contact.phone_number) : ""
+            contact.phone_number ? formatPhoneDisplay(contact.phone_number) : ""
           }
-          placeholder="(555)555-1234"
+          displayTitle={
+            contact.phone_number ? formatPhoneDisplay(contact.phone_number) : ""
+          }
+          placeholder={PHONE_INPUT_PLACEHOLDER}
           inputMode="numeric"
           sanitizeInput={formatPhoneInput}
           onFormattedKeyDown={(event, updateDraft) =>
@@ -208,7 +213,7 @@ function AddContactRow({ index, saving, onSave, onCancel }) {
               updateDraft("phone_number", nextValue)
             )
           }
-          placeholder="(555)555-1234"
+          placeholder={PHONE_INPUT_PLACEHOLDER}
           inputMode="numeric"
           className="h-9 py-0"
         />
@@ -310,11 +315,11 @@ export default function EmergencyContactsSection({
       }
     >
       {isMissing && !showAdd ? (
-        <div className="rounded-2xl border border-dashed border-amber-300 bg-amber-50/40 px-4 py-4">
-          <div className="text-sm font-semibold text-amber-950">
+        <div className="rounded-2xl border border-dashed border-cf-warning-text/35 bg-cf-warning-bg px-4 py-4">
+          <div className="text-sm font-semibold text-cf-warning-text">
             No emergency contact on file.
           </div>
-          <p className="mt-0.5 text-xs text-amber-900/80">
+          <p className="mt-0.5 text-xs text-cf-warning-text/80">
             Required before the next visit. Add at least one person to reach
             during an emergency.
           </p>

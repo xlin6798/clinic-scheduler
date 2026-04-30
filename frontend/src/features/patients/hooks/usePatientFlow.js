@@ -16,6 +16,7 @@ export default function usePatientFlow(facilityId) {
   const [activePatient, setActivePatient] = useState(null);
   const [isHubOpen, setIsHubOpen] = useState(false);
   const [hubPatientId, setHubPatientId] = useState(null);
+  const [hubInitialTab, setHubInitialTab] = useState("registration");
   const [isQuickStartOpen, setIsQuickStartOpen] = useState(false);
 
   useEffect(() => {
@@ -82,7 +83,9 @@ export default function usePatientFlow(facilityId) {
             id: patient.id,
             facility_id: facilityId || patient.facility_id || "",
             first_name: patient.first_name,
+            middle_name: patient.middle_name,
             last_name: patient.last_name,
+            preferred_name: patient.preferred_name,
             date_of_birth: patient.date_of_birth,
             chart_number: patient.chart_number,
           },
@@ -96,6 +99,7 @@ export default function usePatientFlow(facilityId) {
     if (!patient?.id) return;
     addRecentPatient(patient);
     setHubPatientId(String(patient.id));
+    setHubInitialTab("registration");
     setIsHubOpen(true);
   };
 
@@ -115,16 +119,18 @@ export default function usePatientFlow(facilityId) {
     setActivePatient(null);
   };
 
-  const openHub = (patient) => {
+  const openHub = (patient, options = {}) => {
     if (!patient?.id) return;
     addRecentPatient(patient);
     setHubPatientId(String(patient.id));
+    setHubInitialTab(options.initialTab || "registration");
     setIsHubOpen(true);
   };
 
-  const openHubById = (patientId) => {
+  const openHubById = (patientId, options = {}) => {
     if (!patientId) return;
     setHubPatientId(String(patientId));
+    setHubInitialTab(options.initialTab || "registration");
     setIsHubOpen(true);
   };
 
@@ -145,6 +151,7 @@ export default function usePatientFlow(facilityId) {
 
     if (shouldOpenHubAfterCreate) {
       setHubPatientId(String(savedPatient.id));
+      setHubInitialTab("registration");
       setIsHubOpen(true);
     }
   };
@@ -159,9 +166,11 @@ export default function usePatientFlow(facilityId) {
     setSearchInjectedPatient(savedPatient);
     setSelectedPatient?.(savedPatient);
     closeQuickStart();
+    closeSearch();
 
     if (!setSelectedPatient) {
       setHubPatientId(String(savedPatient.id));
+      setHubInitialTab("registration");
       setIsHubOpen(true);
     }
   };
@@ -185,6 +194,7 @@ export default function usePatientFlow(facilityId) {
     hub: {
       isOpen: isHubOpen,
       patientId: hubPatientId,
+      initialTab: hubInitialTab,
       open: openHub,
       openById: openHubById,
       close: closeHub,

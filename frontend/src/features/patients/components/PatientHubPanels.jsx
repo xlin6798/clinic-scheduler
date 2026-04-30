@@ -23,6 +23,12 @@ import {
 import { Badge, Button, Panel } from "../../../shared/components/ui";
 import { formatDOB } from "../../../shared/utils/dateTime";
 import {
+  formatPhoneDisplay,
+  getPatientPhoneEntries,
+  getPrimaryPatientPhoneDisplay,
+} from "../utils/contactValidation";
+import { getPatientFullName } from "../utils/patientDisplay";
+import {
   AppointmentCard,
   DetailRow,
   EmptyState,
@@ -281,6 +287,8 @@ export function PatientDemographicsPanel({
   showFullSsn,
   onToggleSsn,
 }) {
+  const phoneEntries = getPatientPhoneEntries(patient);
+
   return (
     <div className="grid h-full min-h-0 gap-4 overflow-auto xl:grid-cols-[0.74fr_1.26fr]">
       <div className="grid min-h-0 content-start gap-4">
@@ -295,9 +303,7 @@ export function PatientDemographicsPanel({
             </div>
             <div className="min-w-0">
               <div className="truncate text-lg font-semibold text-cf-text">
-                {[patient.first_name, patient.middle_name, patient.last_name]
-                  .filter(Boolean)
-                  .join(" ")}
+                {getPatientFullName(patient)}
               </div>
               <div className="mt-1 flex flex-wrap gap-2">
                 <Badge variant="outline">
@@ -322,8 +328,8 @@ export function PatientDemographicsPanel({
             />
             <SummaryTile
               icon={Phone}
-              label="Primary Phone"
-              value={patient.primary_phone_number}
+              label="Phone"
+              value={getPrimaryPatientPhoneDisplay(patient)}
             />
             <SummaryTile icon={Mail} label="Email" value={patient.email} />
           </div>
@@ -362,13 +368,7 @@ export function PatientDemographicsPanel({
               <DetailRow
                 icon={IdCard}
                 label="Legal Name"
-                value={[
-                  patient.first_name,
-                  patient.middle_name,
-                  patient.last_name,
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
+                value={getPatientFullName(patient)}
               />
               <DetailRow
                 icon={UserRoundCheck}
@@ -452,30 +452,14 @@ export function PatientDemographicsPanel({
             <SectionHeader title="Contact" />
             <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               <DetailRow icon={Mail} label="Email" value={patient.email} />
-              <DetailRow
-                icon={Phone}
-                label="Cell Phone"
-                value={
-                  patient.phones?.find((phone) => phone.label === "cell")
-                    ?.number
-                }
-              />
-              <DetailRow
-                icon={Phone}
-                label="Home Phone"
-                value={
-                  patient.phones?.find((phone) => phone.label === "home")
-                    ?.number
-                }
-              />
-              <DetailRow
-                icon={Phone}
-                label="Work Phone"
-                value={
-                  patient.phones?.find((phone) => phone.label === "work")
-                    ?.number
-                }
-              />
+              {phoneEntries.map((phone) => (
+                <DetailRow
+                  key={`${phone.label}-${phone.number}`}
+                  icon={Phone}
+                  label={`${phone.labelTitle} Phone`}
+                  value={phone.formattedNumber}
+                />
+              ))}
               <DetailRow
                 icon={MapPin}
                 label="Address"
@@ -526,7 +510,7 @@ export function PatientDemographicsPanel({
                         <DetailRow
                           icon={Phone}
                           label="Phone"
-                          value={contact.phone_number}
+                          value={formatPhoneDisplay(contact.phone_number)}
                         />
                         <DetailRow
                           icon={UserRoundCheck}

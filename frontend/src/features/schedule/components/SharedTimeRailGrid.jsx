@@ -39,8 +39,6 @@ export default function SharedTimeRailGrid({
           <ResourceColumnHeader
             key={entry.key}
             resource={resourceOptionsByKey.get(entry.resourceKey)}
-            appointmentCount={appointmentsByColumn.get(entry.key)?.length || 0}
-            intervalMinutes={entry.intervalMinutes}
             isOperatingDay={entry.isOperatingDay}
           />
         ))}

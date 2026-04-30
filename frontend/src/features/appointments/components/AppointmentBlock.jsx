@@ -2,6 +2,7 @@ import {
   DEFAULT_APPOINTMENT_BLOCK_DISPLAY,
   sanitizeAppointmentBlockDisplay,
 } from "../../../shared/constants/appointmentBlockDisplay";
+import { getPatientChartName } from "../../patients/utils/patientDisplay";
 
 function parseHexColor(value) {
   if (typeof value !== "string") return null;
@@ -88,6 +89,13 @@ function getReadableTone(backgroundColor) {
       };
 }
 
+function getNumericStyleHeight(style) {
+  if (!style || style.height == null) return null;
+  if (typeof style.height === "number") return style.height;
+  const parsed = Number.parseFloat(style.height);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 export default function AppointmentBlock({
   appointment,
   onDoubleClick,
@@ -109,6 +117,16 @@ export default function AppointmentBlock({
   const tone = getReadableTone(blockColor);
   const chipColor = statusColor || blockColor || "#ccc";
   const chipLabel = appointment.status_name || "Unscheduled";
+  const durationLabel = appointment.duration_minutes
+    ? `${appointment.duration_minutes}m`
+    : "";
+  const timeLabel = [appointment.time, durationLabel]
+    .filter(Boolean)
+    .join(" · ");
+  const patientName = getPatientChartName(
+    appointment,
+    appointment.patient_name || "Appointment"
+  );
   const detailText = [
     display.showVisitType ? appointment.appointment_type_name : "",
     display.showRoom && appointment.room ? `Room ${appointment.room}` : "",
@@ -118,13 +136,11 @@ export default function AppointmentBlock({
   ]
     .filter(Boolean)
     .join(" • ");
-  const actionLabel = [
-    appointment.patient_name || "Appointment",
-    appointment.time,
-    appointment.status_name,
-  ]
+  const actionLabel = [patientName, appointment.time, appointment.status_name]
     .filter(Boolean)
     .join(", ");
+  const blockHeight = getNumericStyleHeight(style);
+  const isSingleSlotBlock = blockHeight != null && blockHeight <= 44;
 
   return (
     <div
@@ -132,7 +148,7 @@ export default function AppointmentBlock({
       tabIndex={isPreview ? undefined : 0}
       aria-label={isPreview ? undefined : `Open ${actionLabel}`}
       className={[
-        "flex h-full min-w-0 select-none items-stretch rounded-lg border px-2.5 py-1.5 shadow-sm transition",
+        "flex h-full min-w-0 select-none items-stretch overflow-hidden rounded-lg border px-2.5 py-1.5 shadow-sm transition",
         fullWidth || equalWidth
           ? "min-w-0 flex-1 basis-0"
           : "w-[200px] min-w-[200px]",
@@ -191,20 +207,31 @@ export default function AppointmentBlock({
             }
       }
     >
-      <div className="mr-2 flex min-w-0 flex-1 flex-col justify-center">
-        <div className="flex min-w-0 items-center justify-between gap-2">
+      {isSingleSlotBlock ? (
+        <div className="flex min-w-0 flex-1 items-center gap-2">
           <span
-            className="truncate text-[11px] font-semibold"
+            className="shrink-0 truncate text-[11px] font-semibold tabular-nums"
             style={{ color: tone.text }}
           >
-            {appointment.time}
-            {appointment.duration_minutes
-              ? ` · ${appointment.duration_minutes}m`
-              : ""}
+            {timeLabel}
           </span>
+          <span
+            className="min-w-0 truncate text-xs font-semibold"
+            style={{ color: tone.text }}
+          >
+            {patientName}
+          </span>
+          {detailText ? (
+            <span
+              className="hidden min-w-0 flex-1 truncate text-[10px] md:inline"
+              style={{ color: tone.muted }}
+            >
+              {detailText}
+            </span>
+          ) : null}
           {display.showStatusChip && chipLabel ? (
             <span
-              className="inline-flex min-w-0 max-w-[7.5rem] shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide"
+              className="ml-auto inline-flex min-w-0 max-w-[7.5rem] shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide"
               style={{ backgroundColor: tone.badgeBg, color: tone.badgeText }}
             >
               <span
@@ -215,18 +242,44 @@ export default function AppointmentBlock({
             </span>
           ) : null}
         </div>
-        <div
-          className="truncate text-xs font-semibold"
-          style={{ color: tone.text }}
-        >
-          {appointment.patient_name}
-        </div>
-        {detailText ? (
-          <div className="truncate text-[10px]" style={{ color: tone.muted }}>
-            {detailText}
+      ) : (
+        <div className="flex min-w-0 flex-1 flex-col justify-center">
+          <div className="flex min-w-0 items-center justify-between gap-2">
+            <span
+              className="truncate text-[11px] font-semibold"
+              style={{ color: tone.text }}
+            >
+              {timeLabel}
+            </span>
+            {display.showStatusChip && chipLabel ? (
+              <span
+                className="inline-flex min-w-0 max-w-[7.5rem] shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide"
+                style={{
+                  backgroundColor: tone.badgeBg,
+                  color: tone.badgeText,
+                }}
+              >
+                <span
+                  className="h-1.5 w-1.5 shrink-0 rounded-full ring-1 ring-white/70"
+                  style={{ backgroundColor: chipColor }}
+                />
+                <span className="truncate">{chipLabel}</span>
+              </span>
+            ) : null}
           </div>
-        ) : null}
-      </div>
+          <div
+            className="truncate text-xs font-semibold"
+            style={{ color: tone.text }}
+          >
+            {patientName}
+          </div>
+          {detailText ? (
+            <div className="truncate text-[10px]" style={{ color: tone.muted }}>
+              {detailText}
+            </div>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }

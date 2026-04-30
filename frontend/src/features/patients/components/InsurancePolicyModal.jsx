@@ -47,37 +47,17 @@ const defaultValues = {
   notes: "",
 };
 
-function SectionCard({ icon: Icon, title, description, children }) {
+function FieldSection({ icon: Icon, title, children, className = "" }) {
   return (
-    <section className="rounded-2xl border border-cf-border bg-cf-surface p-5 shadow-sm">
-      <div className="flex items-start gap-3">
+    <section className={["min-w-0", className].filter(Boolean).join(" ")}>
+      <div className="mb-2 flex items-center gap-2 border-b border-cf-border pb-2">
         {Icon ? (
-          <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-cf-border bg-cf-surface-soft text-cf-text-subtle">
-            <Icon className="h-4 w-4" />
-          </div>
+          <Icon className="h-4 w-4 shrink-0 text-cf-text-subtle" />
         ) : null}
-        <div className="min-w-0">
-          <h3 className="text-sm font-semibold text-cf-text">{title}</h3>
-          {description ? (
-            <p className="mt-1 text-sm text-cf-text-muted">{description}</p>
-          ) : null}
-        </div>
+        <h3 className="text-sm font-semibold text-cf-text">{title}</h3>
       </div>
-      <div className="mt-4">{children}</div>
+      {children}
     </section>
-  );
-}
-
-function SummaryItem({ label, value }) {
-  return (
-    <div className="rounded-xl border border-cf-border bg-cf-surface px-3 py-3">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-cf-text-subtle">
-        {label}
-      </div>
-      <div className="mt-1 min-h-5 truncate text-sm font-medium text-cf-text">
-        {value || "—"}
-      </div>
-    </div>
   );
 }
 
@@ -165,9 +145,9 @@ export default function InsurancePolicyModal({
       onClose={onClose}
       title="Insurance"
       maxWidth="4xl"
-      panelClassName="h-[min(90vh,880px)]"
-      bodyClassName="flex-1 overflow-hidden p-0"
-      footerClassName="bg-cf-surface"
+      panelClassName="max-h-[min(94dvh,760px)] max-w-5xl"
+      bodyClassName="overflow-hidden p-0"
+      footerClassName="bg-cf-surface !py-3"
       footer={
         <div className="flex w-full items-center justify-between gap-3">
           <div>
@@ -222,84 +202,55 @@ export default function InsurancePolicyModal({
             notes: values.notes.trim(),
           });
         })}
-        className="grid h-full min-h-0 lg:grid-cols-[300px_minmax(0,1fr)]"
+        className="flex min-h-0 flex-col"
       >
-        <aside className="min-h-0 overflow-y-auto border-b border-cf-border bg-cf-surface-muted/65 px-5 py-5 lg:border-r lg:border-b-0">
-          <div className="space-y-5">
-            <section className="rounded-2xl border border-cf-border bg-cf-surface px-4 py-4 shadow-sm">
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-cf-border bg-cf-surface-soft text-cf-text-subtle">
-                  <ShieldCheck className="h-4 w-4" />
-                </div>
-                <div className="min-w-0">
-                  <Badge variant={isEditing ? "outline" : "success"}>
-                    {isEditing ? "Edit policy" : "New policy"}
-                  </Badge>
-                  <div className="mt-2 truncate text-base font-semibold text-cf-text">
-                    {selectedCarrier?.name || "Select carrier"}
-                  </div>
-                  <p className="mt-1 text-sm text-cf-text-muted">
-                    Coverage and subscriber details for this patient.
-                  </p>
-                </div>
-              </div>
-            </section>
+        <div className="shrink-0 border-b border-cf-border bg-cf-surface-muted/50 px-5 py-2.5">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+            <div className="flex min-w-0 items-center gap-2">
+              <ShieldCheck className="h-4 w-4 shrink-0 text-cf-text-subtle" />
+              <Badge variant={isEditing ? "outline" : "success"}>
+                {isEditing ? "Edit policy" : "New policy"}
+              </Badge>
+              <span className="max-w-56 truncate font-semibold text-cf-text">
+                {selectedCarrier?.name || "Select carrier"}
+              </span>
+            </div>
 
-            <section className="space-y-2">
-              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-cf-text-subtle">
+            <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-cf-text-muted">
+              <span className="inline-flex items-center gap-1">
                 <CreditCard className="h-3.5 w-3.5" />
-                Policy Snapshot
-              </div>
+                {watchedMemberId || "Member ID"}
+              </span>
+              {watchedGroupNumber ? (
+                <span>Group {watchedGroupNumber}</span>
+              ) : null}
+              <span>{selectedRelationship}</span>
+              <span>
+                {formatPolicyDate(watchedEffectiveDate)} -{" "}
+                {formatPolicyDate(watchedTerminationDate)}
+              </span>
+            </div>
 
-              <div className="grid gap-2">
-                <SummaryItem label="Carrier" value={selectedCarrier?.name} />
-                <SummaryItem label="Member ID" value={watchedMemberId} />
-                <SummaryItem label="Group" value={watchedGroupNumber} />
-                <SummaryItem label="Order" value={selectedCoverageOrder} />
-                <SummaryItem
-                  label="Relationship"
-                  value={selectedRelationship}
-                />
-                <SummaryItem
-                  label="Effective"
-                  value={formatPolicyDate(watchedEffectiveDate)}
-                />
-                <SummaryItem
-                  label="Ends"
-                  value={formatPolicyDate(watchedTerminationDate)}
-                />
-              </div>
-            </section>
-
-            <section className="rounded-2xl border border-cf-border bg-cf-surface px-4 py-4">
-              <div className="flex items-center gap-2 text-sm font-semibold text-cf-text">
-                <CheckCircle2 className="h-4 w-4 text-cf-text-subtle" />
-                Policy Status
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Badge
-                  variant={
-                    watchedCoverageOrder === "primary" ? "success" : "muted"
-                  }
-                >
-                  {selectedCoverageOrder}
-                </Badge>
-                <Badge variant={watchedIsActive ? "outline" : "warning"}>
-                  {watchedIsActive ? "Active" : "Terminated"}
-                </Badge>
-              </div>
-            </section>
+            <div className="ml-auto flex flex-wrap items-center gap-2">
+              <Badge
+                variant={
+                  watchedCoverageOrder === "primary" ? "success" : "muted"
+                }
+              >
+                {selectedCoverageOrder}
+              </Badge>
+              <Badge variant={watchedIsActive ? "outline" : "warning"}>
+                <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
+                {watchedIsActive ? "Active" : "Terminated"}
+              </Badge>
+            </div>
           </div>
-        </aside>
+        </div>
 
-        <div className="min-h-0 overflow-y-auto bg-cf-page-bg px-5 py-5">
-          <div className="space-y-5">
-            <SectionCard
-              icon={ShieldCheck}
-              title="Coverage"
-              description="Identify the carrier, plan, and policy numbers used for billing."
-            >
-              <div className="grid gap-4 md:grid-cols-2">
+        <div className="min-h-0 max-h-[calc(94dvh-12rem)] overflow-y-auto bg-cf-surface px-5 py-3">
+          <div className="grid gap-x-6 gap-y-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+            <FieldSection icon={ShieldCheck} title="Coverage">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <Label compact required>
                     Carrier
@@ -342,14 +293,10 @@ export default function InsurancePolicyModal({
                   <Input {...register("group_number")} />
                 </div>
               </div>
-            </SectionCard>
+            </FieldSection>
 
-            <SectionCard
-              icon={UserRoundCheck}
-              title="Subscriber"
-              description="Track who holds the policy and how they relate to the patient."
-            >
-              <div className="grid gap-4 md:grid-cols-2">
+            <FieldSection icon={UserRoundCheck} title="Subscriber">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
                 <div>
                   <Label compact>Subscriber Name</Label>
                   <Input {...register("subscriber_name")} />
@@ -369,14 +316,10 @@ export default function InsurancePolicyModal({
                   </Input>
                 </div>
               </div>
-            </SectionCard>
+            </FieldSection>
 
-            <SectionCard
-              icon={CalendarDays}
-              title="Dates and Status"
-              description="Set coverage dates, policy order, and active status."
-            >
-              <div className="grid gap-4 md:grid-cols-2">
+            <FieldSection icon={CalendarDays} title="Dates and Status">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <Label compact>Effective Date</Label>
                   <Input type="date" {...register("effective_date")} />
@@ -388,9 +331,9 @@ export default function InsurancePolicyModal({
                 </div>
 
                 <div className="md:col-span-2">
-                  <Label compact>Policy Order</Label>
+                  <Label compact>Coverage Level</Label>
                   <input type="hidden" {...register("coverage_order")} />
-                  <div className="grid gap-2 sm:grid-cols-4">
+                  <div className="grid gap-2 sm:grid-cols-4 xl:grid-cols-2">
                     {COVERAGE_ORDER_OPTIONS.map((option) => {
                       const isSelected = watchedCoverageOrder === option.value;
 
@@ -402,9 +345,9 @@ export default function InsurancePolicyModal({
                             setValue("coverage_order", option.value)
                           }
                           className={[
-                            "min-h-11 rounded-xl border px-3 py-2 text-sm font-semibold transition",
+                            "min-h-9 rounded-lg border px-3 py-1.5 text-sm font-semibold transition",
                             isSelected
-                              ? "border-cf-accent bg-cf-accent text-white shadow-sm"
+                              ? "border-cf-accent bg-cf-accent text-cf-page-bg shadow-sm"
                               : "border-cf-border bg-cf-surface-soft text-cf-text-muted hover:border-cf-border-strong hover:bg-cf-surface hover:text-cf-text",
                           ].join(" ")}
                           aria-pressed={isSelected}
@@ -416,33 +359,47 @@ export default function InsurancePolicyModal({
                   </div>
                 </div>
 
-                <label className="flex min-h-12 items-center gap-3 rounded-xl border border-cf-border bg-cf-surface-soft px-3 py-3 text-sm font-medium text-cf-text-muted">
+                <div>
+                  <Label compact>Status</Label>
                   <input type="hidden" {...register("is_active")} />
-                  <input
-                    type="checkbox"
-                    checked={!watchedIsActive}
-                    onChange={(event) => {
-                      setValue("is_active", !event.target.checked);
-                    }}
-                    className="h-4 w-4 rounded border-cf-border"
-                  />
-                  Terminated
-                </label>
-              </div>
-            </SectionCard>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {[
+                      { value: true, label: "Active" },
+                      { value: false, label: "Terminated" },
+                    ].map((option) => {
+                      const isSelected = watchedIsActive === option.value;
 
-            <SectionCard
-              icon={FileText}
-              title="Notes"
-              description="Store payer-specific instructions, authorization notes, or verification details."
-            >
+                      return (
+                        <button
+                          key={option.label}
+                          type="button"
+                          onClick={() => setValue("is_active", option.value)}
+                          className={[
+                            "min-h-9 rounded-lg border px-3 py-1.5 text-sm font-semibold transition",
+                            isSelected
+                              ? "border-cf-accent bg-cf-accent text-cf-page-bg shadow-sm"
+                              : "border-cf-border bg-cf-surface-soft text-cf-text-muted hover:border-cf-border-strong hover:bg-cf-surface hover:text-cf-text",
+                          ].join(" ")}
+                          aria-pressed={isSelected}
+                        >
+                          {option.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </FieldSection>
+
+            <FieldSection icon={FileText} title="Notes">
               <Input
                 as="textarea"
-                rows={5}
+                rows={2}
+                className="min-h-20 resize-none"
                 placeholder="Authorization requirements, verification notes, or billing instructions"
                 {...register("notes")}
               />
-            </SectionCard>
+            </FieldSection>
           </div>
         </div>
       </form>

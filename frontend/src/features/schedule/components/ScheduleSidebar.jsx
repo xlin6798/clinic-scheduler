@@ -81,15 +81,16 @@ function shiftYear(dateString, offset) {
 }
 
 function getHeatmapClass(count, maxCount) {
-  if (!count) return "hover:bg-cf-surface-soft";
+  if (!count) return "text-cf-text-muted hover:bg-cf-surface-soft";
 
   const intensity = count / Math.max(maxCount, 1);
   if (intensity >= 0.75)
-    return "bg-blue-300 text-blue-950 ring-1 ring-blue-300";
-  if (intensity >= 0.5) return "bg-blue-200 text-blue-950 ring-1 ring-blue-300";
+    return "bg-sky-300/85 text-slate-950 ring-1 ring-sky-300/80 dark:bg-sky-300/30 dark:text-sky-50 dark:ring-sky-200/35";
+  if (intensity >= 0.5)
+    return "bg-sky-200 text-sky-950 ring-1 ring-sky-300 dark:bg-sky-300/22 dark:text-sky-50 dark:ring-sky-200/25";
   if (intensity >= 0.25)
-    return "bg-blue-100 text-blue-900 ring-1 ring-blue-200";
-  return "bg-blue-50 text-blue-900 ring-1 ring-blue-100";
+    return "bg-sky-100 text-sky-950 ring-1 ring-sky-200 dark:bg-sky-300/15 dark:text-sky-100 dark:ring-sky-200/20";
+  return "bg-sky-50 text-sky-950 ring-1 ring-sky-100 dark:bg-sky-300/10 dark:text-sky-100 dark:ring-sky-200/15";
 }
 
 export default function ScheduleSidebar({
@@ -209,7 +210,7 @@ export default function ScheduleSidebar({
                         className={[
                           "rounded-lg px-2 py-1.5 text-xs font-semibold transition",
                           isActive
-                            ? "bg-cf-text text-white"
+                            ? "bg-cf-accent text-cf-page-bg"
                             : "text-cf-text-muted hover:bg-cf-surface-soft hover:text-cf-text",
                         ].join(" ")}
                       >
@@ -237,7 +238,7 @@ export default function ScheduleSidebar({
             <button
               type="button"
               onClick={onJumpToToday}
-              className="grid h-7 min-w-7 place-items-center rounded-lg bg-cf-surface-soft px-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-cf-text-subtle transition hover:bg-cf-text hover:text-white"
+              className="grid h-7 min-w-7 place-items-center rounded-lg bg-cf-surface-soft px-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-cf-text-subtle transition hover:bg-cf-accent hover:text-cf-page-bg"
               aria-label="Jump schedule to today"
             >
               T
@@ -282,7 +283,7 @@ export default function ScheduleSidebar({
                 className={[
                   "grid aspect-square place-items-center rounded-md font-medium transition",
                   isSelected
-                    ? "bg-cf-text text-white shadow-[var(--shadow-panel)]"
+                    ? "bg-cf-accent text-cf-page-bg shadow-[var(--shadow-panel)] ring-2 ring-cf-border-strong ring-offset-1 ring-offset-cf-surface"
                     : loadClass,
                 ].join(" ")}
                 aria-pressed={isSelected}
@@ -298,10 +299,10 @@ export default function ScheduleSidebar({
         <div className="mt-3 flex items-center justify-between text-[10px] text-cf-text-subtle">
           <span>Less</span>
           <div className="flex items-center gap-1">
-            <span className="h-2 w-3 rounded-sm bg-blue-50 ring-1 ring-blue-100" />
-            <span className="h-2 w-3 rounded-sm bg-blue-100 ring-1 ring-blue-200" />
-            <span className="h-2 w-3 rounded-sm bg-blue-200 ring-1 ring-blue-300" />
-            <span className="h-2 w-3 rounded-sm bg-blue-300/70" />
+            <span className="h-2 w-3 rounded-sm bg-sky-50 ring-1 ring-sky-100 dark:bg-sky-300/10 dark:ring-sky-200/15" />
+            <span className="h-2 w-3 rounded-sm bg-sky-100 ring-1 ring-sky-200 dark:bg-sky-300/15 dark:ring-sky-200/20" />
+            <span className="h-2 w-3 rounded-sm bg-blue-200 ring-1 ring-blue-300 dark:bg-sky-300/22 dark:ring-sky-200/25" />
+            <span className="h-2 w-3 rounded-sm bg-sky-300/85 ring-1 ring-sky-300/80 dark:bg-sky-300/30 dark:ring-sky-200/35" />
           </div>
           <span>Busy</span>
         </div>

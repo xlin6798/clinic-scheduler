@@ -1,9 +1,11 @@
 import { Star } from "lucide-react";
 
 import {
+  formatPhoneDisplay,
   formatPhoneInput,
   getPhoneInputDigits,
   handleFormattedInputDeletion,
+  PHONE_INPUT_PLACEHOLDER,
   validatePhoneNumber,
 } from "../../utils/contactValidation";
 import InlineEditField from "./InlineEditField";
@@ -119,8 +121,9 @@ export default function PhonesSection({ phones = [], onSavePhones }) {
                 )
               }
               value={value}
-              displayValue={value ? formatPhoneInput(value) : ""}
-              placeholder="(555)555-1234"
+              displayValue={value ? formatPhoneDisplay(value) : ""}
+              displayTitle={value ? formatPhoneDisplay(value) : ""}
+              placeholder={PHONE_INPUT_PLACEHOLDER}
               onSave={(next) => handleSavePhone(label, next)}
               validate={(next) => {
                 const trimmed = String(next || "").trim();

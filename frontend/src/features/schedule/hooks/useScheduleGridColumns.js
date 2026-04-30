@@ -182,16 +182,15 @@ export default function useScheduleGridColumns({
     visibleDayEntries.length,
     1
   )}, minmax(0, 1fr))`;
+  const timeZoneAbbreviation = useMemo(
+    () => getTimeZoneAbbreviation(selectedDate, timeZone),
+    [selectedDate, timeZone]
+  );
   const sharedTimeRailEntry = visibleDayEntries[0];
   const sharedTimeSlots = timeSlotsByColumn.get(sharedTimeRailEntry?.key) || [];
   const sharedSlotRowHeight =
     slotRowHeightByColumn.get(sharedTimeRailEntry?.key) ||
     getSlotRowHeight(intervalMinutes);
-  const timeZoneAbbreviation = useMemo(
-    () => getTimeZoneAbbreviation(selectedDate, timeZone),
-    [selectedDate, timeZone]
-  );
-
   const handleRemoveDay = useCallback(
     (removeIndex) => {
       if (!canRemoveDay) return;

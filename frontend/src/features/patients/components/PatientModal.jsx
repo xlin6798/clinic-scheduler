@@ -76,6 +76,7 @@ export default function PatientModal({
   const [editingEmergencyContactIndex, setEditingEmergencyContactIndex] =
     useState(null);
   const [showFullSsn, setShowFullSsn] = useState(false);
+  const [ssnHint, setSsnHint] = useState("");
   const [revealedSsn, setRevealedSsn] = useState("");
   const watchedValues = watch();
   const watchedEmergencyContacts = watch("emergency_contacts") || [];
@@ -193,6 +194,7 @@ export default function PatientModal({
     setPrimaryEmergencyContactIndex(primaryIndex === -1 ? 0 : primaryIndex);
     setEditingEmergencyContactIndex(null);
     setShowFullSsn(false);
+    setSsnHint("");
     setRevealedSsn("");
     setSubmitError("");
   }, [isOpen, patient, reset]);
@@ -305,6 +307,7 @@ export default function PatientModal({
   const handleToggleSsn = async () => {
     if (showFullSsn) {
       setShowFullSsn(false);
+      setSsnHint("");
       return;
     }
 
@@ -312,9 +315,17 @@ export default function PatientModal({
       try {
         setSubmitError("");
         const response = await revealPatientSsn(patient.id, facilityId);
-        const nextSsn = getSsnInputDigits(response.ssn || "");
-        setRevealedSsn(nextSsn);
-        setValue("ssn", formatSsnInput(nextSsn), { shouldDirty: false });
+        const nextSsn = getSsnInputDigits(response?.ssn || "");
+        if (nextSsn.length !== 9) {
+          setValue("ssn", "", { shouldDirty: false });
+          setSsnHint(
+            "Stored full SSN is unavailable; enter the full SSN to replace it."
+          );
+        } else {
+          setRevealedSsn(nextSsn);
+          setSsnHint("");
+          setValue("ssn", formatSsnInput(nextSsn), { shouldDirty: false });
+        }
       } catch (error) {
         setSubmitError(getErrorMessage(error, "Failed to reveal SSN."));
         return;
@@ -335,7 +346,7 @@ export default function PatientModal({
       <div
         ref={modalRef}
         style={modalStyle}
-        className="fixed flex max-h-[min(94dvh,1040px)] w-[min(1400px,96vw)] flex-col rounded-[1.75rem] border border-cf-border bg-cf-surface shadow-[var(--shadow-panel-lg)]"
+        className="fixed flex max-h-[min(94dvh,1040px)] w-[min(1400px,96vw)] flex-col overflow-hidden rounded-[var(--radius-cf-shell)] border border-cf-border bg-cf-surface shadow-[var(--shadow-panel-lg)]"
         onClick={(e) => e.stopPropagation()}
       >
         <form
@@ -343,17 +354,13 @@ export default function PatientModal({
           className="flex min-h-0 flex-1 flex-col"
         >
           <PatientModalHeader
-            completionPercent={completionPercent}
             dragHandleProps={dragHandleProps}
             mode={mode}
             onClose={onClose}
-            patient={patient}
             patientInitials={patientInitials}
-            patientName={patientName}
-            watchedValues={watchedValues}
           />
 
-          <div className="flex-1 overflow-y-auto bg-gradient-to-b from-cf-page-bg to-cf-surface-muted/55 px-4 py-5 sm:px-6">
+          <div className="flex-1 overflow-y-auto bg-cf-page-bg px-4 py-5 sm:px-6">
             <div className="mx-auto grid max-w-[1360px] gap-5 xl:grid-cols-[220px_minmax(0,1fr)_300px]">
               <RegistrationRail steps={registrationSteps} />
 
@@ -378,6 +385,7 @@ export default function PatientModal({
                     register={register}
                     registerSsnField={registerSsnField}
                     shouldEditSsn={shouldEditSsn}
+                    ssnHint={ssnHint}
                     showFullSsn={showFullSsn}
                   />
 

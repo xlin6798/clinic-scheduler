@@ -1,15 +1,57 @@
 import { formatDOB } from "../../../shared/utils/dateTime";
 
-export function getPatientName(patient, fallback = "Unknown patient") {
+function getMiddleInitial(value) {
+  const trimmed = String(value || "").trim();
+  if (!trimmed) return "";
+
+  const initial = trimmed.charAt(0).toUpperCase();
+  return `${initial}.`;
+}
+
+export function getPatientChartName(patient, fallback = "Unknown patient") {
   if (!patient) return fallback;
 
+  const firstName =
+    patient.preferred_name ||
+    patient.patient_preferred_name ||
+    patient.first_name ||
+    patient.patient_first_name ||
+    "";
+  const legalFirstName = patient.first_name || patient.patient_first_name || "";
+  const lastName = patient.last_name || patient.patient_last_name || "";
+  const middleInitial = getMiddleInitial(
+    patient.middle_name || patient.patient_middle_name
+  );
+  const givenName = [firstName, middleInitial].filter(Boolean).join(" ");
+  const chartName = [lastName, givenName].filter(Boolean).join(", ");
+
   return (
-    patient.display_name ||
+    chartName ||
+    [legalFirstName, middleInitial, lastName].filter(Boolean).join(" ") ||
+    patient.patient_name ||
     patient.full_name ||
-    [patient.last_name, patient.first_name].filter(Boolean).join(", ") ||
-    [patient.first_name, patient.last_name].filter(Boolean).join(" ") ||
+    patient.display_name ||
     fallback
   );
+}
+
+export function getPatientFullName(patient, fallback = "Unknown patient") {
+  if (!patient) return fallback;
+
+  const firstName = patient.first_name || patient.patient_first_name || "";
+  const lastName = patient.last_name || patient.patient_last_name || "";
+  const middleInitial = getMiddleInitial(
+    patient.middle_name || patient.patient_middle_name
+  );
+
+  return (
+    [firstName, middleInitial, lastName].filter(Boolean).join(" ") ||
+    getPatientChartName(patient, fallback)
+  );
+}
+
+export function getPatientName(patient, fallback = "Unknown patient") {
+  return getPatientChartName(patient, fallback);
 }
 
 export function getPatientInitials(patient) {

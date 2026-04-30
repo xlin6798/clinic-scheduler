@@ -3,7 +3,10 @@ import { Check, Phone, Plus, Siren, Star, Trash2, X } from "lucide-react";
 import { FieldError, FormLabel as Label } from "./PatientFormFields";
 import { EMPTY_EMERGENCY_CONTACT } from "./patientModalData";
 import { Badge, Button, Input, Panel } from "../../../shared/components/ui";
-import { validatePhoneNumber } from "../utils/contactValidation";
+import {
+  PHONE_INPUT_PLACEHOLDER,
+  validatePhoneNumber,
+} from "../utils/contactValidation";
 
 function EmergencyContactEditor({
   contactPreview,
@@ -81,6 +84,7 @@ function EmergencyContactEditor({
                   type="text"
                   inputMode="numeric"
                   className="pl-9"
+                  placeholder={PHONE_INPUT_PLACEHOLDER}
                   {...registerPhoneField(
                     `emergency_contacts.${index}.phone_number`,
                     {

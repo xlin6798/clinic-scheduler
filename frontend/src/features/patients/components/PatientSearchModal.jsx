@@ -1,23 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  AlertCircle,
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  UserRoundCheck,
-  UserPlus,
-  X,
-} from "lucide-react";
 
 import { searchPatients } from "../api/patients";
 import { parsePatientQuery } from "../utils/parsePatientQuery";
 import {
+  MatchQueueHeader,
+  PatientSearchHeader,
+  PatientSearchInputPanel,
+  ResultsPagination,
+} from "./PatientSearchModalChrome";
+import {
+  PatientSearchEmptyState,
   PatientResultRow,
   PatientResultSkeleton,
   SelectedPatientPanel,
 } from "./PatientSearchModalParts";
 import useDraggableModal from "../../../shared/hooks/useDraggableModal";
-import { Button, Input, Notice } from "../../../shared/components/ui";
 import { getErrorMessage } from "../../../shared/utils/errors";
 
 const PAGE_SIZE = 10;
@@ -49,6 +46,15 @@ export default function PatientSearchModal({
   );
   const smartSearchValue = smartQuery.trim();
   const canSearch = smartSearchValue.length >= 2;
+  const resultLabel =
+    results.length === 1 ? "1 match" : `${results.length} matches`;
+  const searchStatusLabel = results.length
+    ? resultLabel
+    : canSearch
+      ? loading
+        ? "Searching"
+        : "No match"
+      : "Ready";
   const paginatedResults = useMemo(() => {
     const start = (page - 1) * PAGE_SIZE;
     return results.slice(start, start + PAGE_SIZE);
@@ -175,81 +181,33 @@ export default function PatientSearchModal({
       <div
         ref={modalRef}
         style={modalStyle}
-        className="fixed flex max-h-[min(90dvh,760px)] w-full max-w-[72rem] flex-col overflow-hidden rounded-[1.7rem] border border-cf-border bg-cf-surface shadow-[var(--shadow-panel-lg)]"
+        className="fixed flex max-h-[min(94dvh,840px)] w-full max-w-[76rem] flex-col overflow-hidden rounded-2xl border border-cf-border bg-cf-surface shadow-[var(--shadow-panel-lg)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div
-          {...dragHandleProps}
-          className="flex cursor-move select-none items-center justify-between gap-4 border-b border-cf-border bg-[linear-gradient(180deg,var(--color-surface),var(--color-surface-muted))] px-5 py-4"
-        >
-          <div className="min-w-0">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cf-text-subtle">
-              Patient Search · Compact Match Desk
-            </div>
-            <div className="mt-0.5 text-xl font-semibold tracking-[-0.02em] text-cf-text">
-              {allowSelect ? "Attach patient" : "Find patient"}
-            </div>
-          </div>
+        <PatientSearchHeader
+          dragHandleProps={dragHandleProps}
+          onClose={onClose}
+          onOpenCreatePatient={onOpenCreatePatient}
+        />
 
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="default"
-              size="sm"
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={onOpenCreatePatient}
-              className="bg-cf-text text-white hover:bg-cf-text/90"
-            >
-              <UserPlus className="h-4 w-4" />
-              New patient
-            </Button>
-            <button
-              type="button"
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={onClose}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-cf-text-subtle transition hover:bg-cf-surface-soft hover:text-cf-text-muted"
-              aria-label="Close"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
+        <PatientSearchInputPanel
+          error={error}
+          page={page}
+          searchStatusLabel={searchStatusLabel}
+          smartQuery={smartQuery}
+          totalPages={totalPages}
+          onSmartQueryChange={setSmartQuery}
+        />
 
-        <div className="bg-cf-page-bg px-5 pt-4">
-          {error && (
-            <Notice tone="danger" title="Patient search failed">
-              {error}
-            </Notice>
-          )}
+        <div className="relative z-10 grid min-h-[28rem] flex-1 gap-0 border-y border-cf-border bg-cf-surface lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="min-h-0 overflow-hidden bg-cf-surface">
+            <MatchQueueHeader
+              canSearch={canSearch}
+              loading={loading}
+              resultLabel={resultLabel}
+              selected={!!selectedPatient}
+            />
 
-          <div className={error ? "mt-3" : ""}>
-            <div className="rounded-3xl border border-cf-border bg-cf-surface-muted/55 p-3">
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-cf-text-subtle" />
-                <Input
-                  type="text"
-                  value={smartQuery}
-                  onChange={(event) => setSmartQuery(event.target.value)}
-                  aria-label="Smart patient search"
-                  className="h-12 rounded-2xl border-cf-border bg-cf-surface pl-10 pr-24 text-sm font-semibold focus:border-cf-border-strong focus:ring-0"
-                  autoFocus
-                />
-                <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-cf-text-subtle">
-                  {results.length > 0
-                    ? `${results.length} match${results.length === 1 ? "" : "es"}`
-                    : canSearch
-                      ? loading
-                        ? "Searching"
-                        : "No matches"
-                      : "Type a clue"}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="relative z-10 grid min-h-0 flex-1 bg-cf-page-bg px-5 pb-4 pt-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-          <div className="min-h-0 overflow-hidden rounded-t-3xl border border-cf-border bg-cf-surface lg:rounded-l-3xl lg:rounded-tr-none lg:border-r-0">
             <div className="min-h-0 max-h-full overflow-auto">
               {loading
                 ? Array.from({ length: 4 }).map((_, index) => (
@@ -258,38 +216,10 @@ export default function PatientSearchModal({
                 : null}
 
               {!loading && paginatedResults.length === 0 ? (
-                <div className="flex min-h-[20rem] items-center justify-center px-5 py-10 text-center">
-                  <div className="mx-auto max-w-md">
-                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-cf-border bg-cf-surface-muted text-cf-text-subtle">
-                      {canSearch ? (
-                        <AlertCircle className="h-5 w-5" />
-                      ) : (
-                        <UserRoundCheck className="h-5 w-5" />
-                      )}
-                    </div>
-                    <div className="mt-4 text-base font-semibold text-cf-text">
-                      {canSearch
-                        ? "No patients found"
-                        : "Start with any patient clue"}
-                    </div>
-                    <div className="mt-2 text-sm leading-6 text-cf-text-muted">
-                      {canSearch
-                        ? "Create only after confirming name and DOB."
-                        : "Search by name, MRN, DOB, or phone. The best match is selected automatically."}
-                    </div>
-                    {canSearch ? (
-                      <Button
-                        type="button"
-                        variant="default"
-                        className="mt-5"
-                        onClick={onOpenCreatePatient}
-                      >
-                        <UserPlus className="h-4 w-4" />
-                        Create Patient
-                      </Button>
-                    ) : null}
-                  </div>
-                </div>
+                <PatientSearchEmptyState
+                  canSearch={canSearch}
+                  onOpenCreatePatient={onOpenCreatePatient}
+                />
               ) : null}
 
               {!loading && paginatedResults.length > 0
@@ -307,35 +237,14 @@ export default function PatientSearchModal({
                 : null}
 
               {!loading && results.length > PAGE_SIZE ? (
-                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-cf-border px-4 py-3">
-                  <div className="text-sm text-cf-text-muted">
-                    Page {page} of {totalPages}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="default"
-                      size="sm"
-                      onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-                      disabled={page === 1}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      Prev
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="default"
-                      size="sm"
-                      onClick={() =>
-                        setPage((prev) => Math.min(totalPages, prev + 1))
-                      }
-                      disabled={page === totalPages}
-                    >
-                      Next
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
+                <ResultsPagination
+                  page={page}
+                  totalPages={totalPages}
+                  onPrevious={() => setPage((prev) => Math.max(1, prev - 1))}
+                  onNext={() =>
+                    setPage((prev) => Math.min(totalPages, prev + 1))
+                  }
+                />
               ) : null}
             </div>
           </div>

@@ -247,6 +247,7 @@ export default function HubRegistrationInline({
               }))}
               value={patient.sex_at_birth || ""}
               onSave={(next) => savePartial({ sex_at_birth: next })}
+              validate={(v) => (v ? null : "Sex at birth is required.")}
             />
             <InlineEditField
               label="Pronouns"
@@ -314,6 +315,7 @@ export default function HubRegistrationInline({
                 label="Email"
                 type="email"
                 value={patient.email || ""}
+                displayTitle={patient.email || ""}
                 onSave={(next) => savePartial({ email: next.trim() })}
                 validate={(v) =>
                   !v.trim() || /\S+@\S+\.\S+/.test(v.trim())
@@ -423,20 +425,26 @@ export default function HubRegistrationInline({
       </div>
 
       {/* Providers + Pharmacy paired — both small, both lookup-driven. */}
-      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+      <div className="grid items-stretch gap-4 lg:grid-cols-2">
         <div
+          className="h-full"
           ref={(node) => {
             sectionRefs.current.pcp = node;
           }}
         >
-          <RegistrationSectionShell icon={Stethoscope} title="Providers">
-            <dl className="grid grid-cols-1 gap-x-5 gap-y-3 md:grid-cols-2">
+          <RegistrationSectionShell
+            icon={Stethoscope}
+            title="Providers"
+            bodyClassName="px-3.5 py-2.5"
+          >
+            <dl className="grid grid-cols-1 gap-x-4 gap-y-1 md:grid-cols-2">
               <InlineEditField
                 label="PCP"
                 type="select"
                 options={pcpOptions}
                 value={patient.pcp ? String(patient.pcp) : ""}
                 displayValue={patient.pcp_name || ""}
+                compact
                 onSave={(next) =>
                   savePartial({ pcp: next ? Number(next) : null })
                 }
@@ -451,6 +459,7 @@ export default function HubRegistrationInline({
                     : ""
                 }
                 displayValue={patient.referring_provider_name || ""}
+                compact
                 onSave={(next) =>
                   savePartial({
                     referring_provider: next ? Number(next) : null,
@@ -462,6 +471,7 @@ export default function HubRegistrationInline({
         </div>
 
         <div
+          className="h-full"
           ref={(node) => {
             sectionRefs.current.pharmacy = node;
           }}

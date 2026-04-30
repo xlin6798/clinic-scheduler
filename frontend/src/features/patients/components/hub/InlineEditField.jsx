@@ -6,11 +6,11 @@ import { Input } from "../../../../shared/components/ui";
 /**
  * Single-field inline editor used by the patient hub registration sections.
  *
- * Default mode shows a value with a hover-revealed pencil. Click (or focus)
- * flips the cell into an editable input. Enter or blur-with-changes saves;
- * Escape cancels. The component remains controlled by its parent — `onSave`
- * receives the next value and is expected to return a promise that resolves
- * once the patch lands. Errors are surfaced inline.
+ * Default mode keeps the displayed value selectable for copying. Double-click,
+ * Enter/F2, or the pencil button flips the cell into an editable input. Enter
+ * or blur-with-changes saves; Escape cancels. The component remains controlled
+ * by its parent — `onSave` receives the next value and is expected to return a
+ * promise that resolves once the patch lands. Errors are surfaced inline.
  */
 export default function InlineEditField({
   label,
@@ -26,11 +26,13 @@ export default function InlineEditField({
   multiline = false,
   rows = 3,
   displayValue,
+  displayTitle,
   formatDisplay,
   onSave,
   validate,
   disabled = false,
   emptyHint = "",
+  compact = false,
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(value ?? "");
@@ -80,7 +82,12 @@ export default function InlineEditField({
   const commit = async (candidateValue = draft) => {
     if (submitState.status === "saving") return;
 
-    const nextValue = candidateValue;
+    const nextValue =
+      candidateValue &&
+      typeof candidateValue === "object" &&
+      "target" in candidateValue
+        ? draft
+        : candidateValue;
     if (
       String(coerceDraft(nextValue) ?? "") === String(coerceDraft(value) ?? "")
     ) {
@@ -159,6 +166,13 @@ export default function InlineEditField({
     (option) => String(option.value) === String(draft ?? "")
   );
   const selectedLabel = selectedOption?.label || placeholder;
+  const displayText = renderedDisplay || emptyHint || placeholder;
+  const displayTooltip = displayTitle || renderedDisplay || "";
+  const handleDisplayKeyDown = (event) => {
+    if (event.key !== "Enter" && event.key !== "F2") return;
+    event.preventDefault();
+    beginEdit();
+  };
 
   // Both display and edit states share the same wrapper height so clicking
   // into a field never resizes the surrounding grid row. The label sits on
@@ -168,34 +182,54 @@ export default function InlineEditField({
     return (
       <div className={["min-w-0", className].join(" ")}>
         {label ? (
-          <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-cf-text-subtle">
+          <div
+            className={[
+              "font-semibold uppercase tracking-[0.14em] text-cf-text-subtle",
+              compact ? "text-[9px]" : "text-[10px]",
+            ].join(" ")}
+          >
             {label}
           </div>
         ) : null}
-        <button
-          type="button"
-          onClick={beginEdit}
-          disabled={disabled}
+        <div
           className={[
-            "group mt-0.5 -mx-2 flex h-9 w-[calc(100%+1rem)] items-center gap-1.5 rounded-lg px-2 text-left text-sm transition",
-            "hover:bg-cf-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cf-accent/25",
-            disabled ? "cursor-not-allowed opacity-60" : "cursor-text",
+            "group -mx-2 flex w-[calc(100%+1rem)] items-center gap-1.5 rounded-lg px-2 text-left text-sm transition",
+            compact ? "mt-0 h-8" : "mt-0.5 h-9",
+            "hover:bg-cf-surface-soft focus-within:outline-none focus-within:ring-2 focus-within:ring-cf-accent/25",
+            disabled ? "opacity-60" : "",
           ].join(" ")}
         >
           <span
+            role="button"
+            tabIndex={disabled ? -1 : 0}
+            onDoubleClick={beginEdit}
+            onKeyDown={handleDisplayKeyDown}
+            aria-label={label ? `${label}: ${displayText}` : displayText}
+            title={displayTooltip || undefined}
             className={[
-              "min-w-0 flex-1 truncate font-medium",
+              "min-w-0 flex-1 truncate font-medium select-text focus:outline-none",
               renderedDisplay ? "text-cf-text" : "text-cf-text-subtle",
+              disabled ? "cursor-not-allowed" : "cursor-text",
             ].join(" ")}
           >
-            {renderedDisplay || emptyHint || placeholder}
+            {displayText}
           </span>
           {!disabled ? (
-            <Pencil className="h-3 w-3 shrink-0 text-cf-text-subtle opacity-0 transition group-hover:opacity-100" />
+            <button
+              type="button"
+              onClick={beginEdit}
+              className={[
+                "grid shrink-0 place-items-center rounded-md text-cf-text-subtle opacity-0 transition hover:bg-cf-surface-muted hover:text-cf-text group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cf-accent/25",
+                compact ? "h-6 w-6" : "h-7 w-7",
+              ].join(" ")}
+              aria-label={label ? `Edit ${label}` : "Edit field"}
+            >
+              <Pencil className="h-3 w-3" />
+            </button>
           ) : null}
-        </button>
+        </div>
         {/* Reserved error/help slot keeps both states the same total height. */}
-        <p className="mt-1 h-4" aria-hidden="true" />
+        <p className={compact ? "mt-0.5 h-3" : "mt-1 h-4"} aria-hidden="true" />
       </div>
     );
   }
@@ -203,12 +237,21 @@ export default function InlineEditField({
   return (
     <div className={["min-w-0", className].join(" ")}>
       {label ? (
-        <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-cf-text-subtle">
+        <div
+          className={[
+            "font-semibold uppercase tracking-[0.14em] text-cf-text-subtle",
+            compact ? "text-[9px]" : "text-[10px]",
+          ].join(" ")}
+        >
           {label}
         </div>
       ) : null}
 
-      <div className="mt-0.5 flex items-start gap-1">
+      <div
+        className={["flex items-start gap-1", compact ? "mt-0" : "mt-0.5"].join(
+          " "
+        )}
+      >
         <div className="min-w-0 flex-1">
           {type === "select" ? (
             <div className="relative">
@@ -219,7 +262,8 @@ export default function InlineEditField({
                 onClick={() => setIsSelectOpen((current) => !current)}
                 onKeyDown={handleKeyDown}
                 className={[
-                  "flex h-9 w-full items-center gap-2 rounded-xl border border-cf-border-strong bg-cf-surface px-3 text-left text-sm text-cf-text shadow-sm outline-none transition",
+                  "flex w-full items-center gap-2 rounded-xl border border-cf-border-strong bg-cf-surface px-3 text-left text-sm text-cf-text shadow-sm outline-none transition",
+                  compact ? "h-8" : "h-9",
                   "focus:border-cf-accent focus:ring-2 focus:ring-cf-accent/20 disabled:cursor-not-allowed disabled:opacity-50",
                 ].join(" ")}
                 aria-haspopup="listbox"
@@ -273,7 +317,7 @@ export default function InlineEditField({
               disabled={submitState.status === "saving"}
               onChange={(event) => updateDraft(event.target.value)}
               onKeyDown={handleKeyDown}
-              onBlur={commit}
+              onBlur={() => commit()}
               placeholder={placeholder}
               maxLength={maxLength}
             />
@@ -286,10 +330,10 @@ export default function InlineEditField({
               disabled={submitState.status === "saving"}
               onChange={(event) => updateDraft(event.target.value)}
               onKeyDown={handleKeyDown}
-              onBlur={commit}
+              onBlur={() => commit()}
               placeholder={placeholder}
               maxLength={maxLength}
-              className="h-9 py-0"
+              className={[compact ? "h-8" : "h-9", "py-0"].join(" ")}
             />
           )}
         </div>
@@ -297,9 +341,12 @@ export default function InlineEditField({
         <button
           type="button"
           onMouseDown={(event) => event.preventDefault()}
-          onClick={commit}
+          onClick={() => commit()}
           disabled={submitState.status === "saving"}
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-cf-border bg-cf-surface text-cf-text-muted shadow-sm transition hover:bg-cf-surface-soft hover:text-cf-text"
+          className={[
+            "grid shrink-0 place-items-center rounded-lg border border-cf-border bg-cf-surface text-cf-text-muted shadow-sm transition hover:bg-cf-surface-soft hover:text-cf-text",
+            compact ? "h-8 w-8" : "h-9 w-9",
+          ].join(" ")}
           aria-label="Save"
         >
           {submitState.status === "saving" ? (
@@ -313,7 +360,10 @@ export default function InlineEditField({
           onMouseDown={(event) => event.preventDefault()}
           onClick={cancelEdit}
           disabled={submitState.status === "saving"}
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-cf-border bg-cf-surface text-cf-text-subtle shadow-sm transition hover:bg-cf-surface-soft hover:text-cf-text-muted"
+          className={[
+            "grid shrink-0 place-items-center rounded-lg border border-cf-border bg-cf-surface text-cf-text-subtle shadow-sm transition hover:bg-cf-surface-soft hover:text-cf-text-muted",
+            compact ? "h-8 w-8" : "h-9 w-9",
+          ].join(" ")}
           aria-label="Cancel"
         >
           <X className="h-4 w-4" />
@@ -322,7 +372,12 @@ export default function InlineEditField({
 
       {/* Reserved height matches the display state so the grid row never
           jumps when entering edit. Errors render in the same slot. */}
-      <p className="mt-1 h-4 truncate text-xs text-cf-danger-text">
+      <p
+        className={[
+          "truncate text-xs text-cf-danger-text",
+          compact ? "mt-0.5 h-3" : "mt-1 h-4",
+        ].join(" ")}
+      >
         {submitState.status === "error" && submitState.error
           ? submitState.error
           : ""}

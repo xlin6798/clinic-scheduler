@@ -180,6 +180,11 @@ export function formatDeclinableValue(value, declined, labels = null) {
 
 export function DetailRow({ label, value, icon: Icon = null, className = "" }) {
   const hasValue = value !== null && value !== undefined && value !== "";
+  const displayValue = hasValue ? value : "—";
+  const titleValue =
+    typeof displayValue === "string" || typeof displayValue === "number"
+      ? String(displayValue)
+      : undefined;
 
   return (
     <div
@@ -194,8 +199,11 @@ export function DetailRow({ label, value, icon: Icon = null, className = "" }) {
         {Icon ? <Icon className="h-3.5 w-3.5" /> : null}
         <span className="min-w-0 truncate">{label}</span>
       </div>
-      <div className="mt-1.5 min-w-0 whitespace-pre-wrap break-words text-sm font-medium leading-5 text-cf-text">
-        {hasValue ? value : "—"}
+      <div
+        className="mt-1.5 min-w-0 whitespace-pre-wrap break-words text-sm font-medium leading-5 text-cf-text select-text"
+        title={titleValue}
+      >
+        {displayValue}
       </div>
     </div>
   );
@@ -213,14 +221,19 @@ export function SectionHeader({ title, description }) {
 }
 
 export function SummaryTile({ label, value, icon: Icon }) {
+  const displayValue = value || "—";
+
   return (
     <div className="rounded-xl border border-cf-border bg-cf-surface px-4 py-3">
       <div className="flex items-center gap-2 text-xs font-medium text-cf-text-subtle">
         {Icon ? <Icon className="h-4 w-4" /> : null}
         {label}
       </div>
-      <div className="mt-2 truncate text-sm font-semibold text-cf-text">
-        {value || "—"}
+      <div
+        className="mt-2 truncate text-sm font-semibold text-cf-text select-text"
+        title={String(displayValue)}
+      >
+        {displayValue}
       </div>
     </div>
   );

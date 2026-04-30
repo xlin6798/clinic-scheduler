@@ -6,6 +6,7 @@ import { ClipboardList, Clock3, UserRoundCheck } from "lucide-react";
 
 import { fetchPatientById } from "../../patients/api/patients";
 import { fetchPatientInsurancePolicies } from "../../patients/api/insurance";
+import { getPatientPhoneEntries } from "../../patients/utils/contactValidation";
 import { Button, Input, Notice } from "../../../shared/components/ui";
 import { MUI_DATE_FIELD_SX } from "../../../shared/components/ui/dateFieldStyles";
 import useDraggableModal from "../../../shared/hooks/useDraggableModal";
@@ -32,6 +33,19 @@ import {
   isRenderingProviderStaff,
   parseFacilityLocalDateTime,
 } from "./appointmentModalUtils";
+
+function getDurationMinutes(start, end) {
+  if (
+    !(start instanceof Date) ||
+    !(end instanceof Date) ||
+    Number.isNaN(start.getTime()) ||
+    Number.isNaN(end.getTime())
+  ) {
+    return 0;
+  }
+
+  return Math.max(0, Math.round((end.getTime() - start.getTime()) / 60000));
+}
 
 export default function AppointmentModal({
   isOpen,
@@ -70,6 +84,7 @@ export default function AppointmentModal({
       resource: "",
       rendering_provider: "",
       appointment_time: null,
+      end_time: null,
       room: "",
       reason: "",
       notes: "",
@@ -92,14 +107,27 @@ export default function AppointmentModal({
       resources.find(
         (resource) => String(resource.id) === String(initialResourceId)
       ) || null;
+    const initialAppointmentTime = formData.appointment_time
+      ? parseFacilityLocalDateTime(formData.appointment_time, timeZone)
+      : null;
+    const initialAppointmentType =
+      typeOptions.find(
+        (option) => String(option.id) === String(formData.appointment_type)
+      ) || null;
+    const initialDuration =
+      Number(formData.duration_minutes) ||
+      initialAppointmentType?.duration_minutes ||
+      0;
+    const initialEndTime = formData.end_time
+      ? parseFacilityLocalDateTime(formData.end_time, timeZone)
+      : addMinutes(initialAppointmentTime, initialDuration);
 
     reset({
       patient: selectedPatient?.id || formData.patient || "",
       resource: initialResourceId,
       rendering_provider: formData.rendering_provider || "",
-      appointment_time: formData.appointment_time
-        ? parseFacilityLocalDateTime(formData.appointment_time, timeZone)
-        : null,
+      appointment_time: initialAppointmentTime,
+      end_time: initialEndTime,
       room: formData.room || initialResource?.default_room || "",
       reason: formData.reason || "",
       notes: formData.notes || "",
@@ -117,6 +145,7 @@ export default function AppointmentModal({
     resources,
     selectedPatient,
     timeZone,
+    typeOptions,
   ]);
 
   useEffect(() => {
@@ -127,6 +156,7 @@ export default function AppointmentModal({
   }, [selectedPatient, setValue, clearErrors]);
 
   const watchedAppointmentTime = watch("appointment_time");
+  const watchedEndTime = watch("end_time");
   const watchedResource = watch("resource");
   const watchedRenderingProvider = watch("rendering_provider");
   const watchedAppointmentType = watch("appointment_type");
@@ -147,13 +177,6 @@ export default function AppointmentModal({
     [statusOptions, watchedStatus]
   );
 
-  const durationMinutes = selectedAppointmentType?.duration_minutes || 0;
-
-  const computedEndTime = useMemo(() => {
-    if (!watchedAppointmentTime || !durationMinutes) return null;
-    return addMinutes(watchedAppointmentTime, durationMinutes);
-  }, [watchedAppointmentTime, durationMinutes]);
-
   const appointmentHeaderDate = useMemo(() => {
     if (!watchedAppointmentTime) return "—";
     return formatDateOnlyInTimeZone(
@@ -167,6 +190,11 @@ export default function AppointmentModal({
     if (!watchedAppointmentTime) return "—";
     return formatTimeInTimeZone(watchedAppointmentTime, timeZone, "h:mm a");
   }, [watchedAppointmentTime, timeZone]);
+
+  const appointmentHeaderEndTime = useMemo(() => {
+    if (!watchedEndTime) return "";
+    return formatTimeInTimeZone(watchedEndTime, timeZone, "h:mm a");
+  }, [watchedEndTime, timeZone]);
 
   const selectedPatientId = selectedPatient?.id || formData.patient || "";
   const patientDetailsQuery = useQuery({
@@ -246,6 +274,7 @@ export default function AppointmentModal({
         patient: selectedPatient?.id || "",
         facility: data.facility || facilityId || "",
         appointment_time: formatPickerValueForApi(data.appointment_time),
+        end_time: formatPickerValueForApi(data.end_time),
       });
     } catch (err) {
       setInternalError(getErrorMessage(err, "Failed to submit form."));
@@ -253,8 +282,8 @@ export default function AppointmentModal({
   };
 
   const displayError = error || internalError;
-  const patientDisplayName = getPatientDisplayName(selectedPatient);
-  const patientPhone = patientSnapshot.primary_phone_number || "";
+  const patientDisplayName = getPatientDisplayName(patientSnapshot);
+  const patientPhones = getPatientPhoneEntries(patientSnapshot);
   const patientAddress = formatAddress(patientSnapshot.address);
   const selectedStatusColor = selectedStatusOption?.color || null;
   const providerDisplayName = selectedRenderingProvider
@@ -272,7 +301,7 @@ export default function AppointmentModal({
       <div
         ref={modalRef}
         style={modalStyle}
-        className="fixed flex h-[min(92vh,940px)] w-[min(1280px,96vw)] flex-col overflow-hidden rounded-[1.6rem] border border-cf-border bg-cf-surface shadow-[var(--shadow-panel-lg)]"
+        className="fixed flex h-[min(88vh,860px)] w-[min(1180px,96vw)] flex-col overflow-hidden rounded-2xl border border-cf-border bg-cf-surface shadow-[var(--shadow-panel-lg)]"
         onClick={(e) => e.stopPropagation()}
       >
         <form
@@ -287,9 +316,7 @@ export default function AppointmentModal({
             formData={formData}
             appointmentHeaderDate={appointmentHeaderDate}
             appointmentHeaderTime={appointmentHeaderTime}
-            computedEndTime={computedEndTime}
-            timeZone={timeZone}
-            durationMinutes={durationMinutes}
+            appointmentHeaderEndTime={appointmentHeaderEndTime}
             selectedResource={selectedResource}
             providerDisplayName={providerDisplayName}
             selectedStatusOption={selectedStatusOption}
@@ -315,7 +342,7 @@ export default function AppointmentModal({
               {...register("status", { required: "Status is required." })}
             />
 
-            <div className="grid h-full min-h-0 lg:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="grid h-full min-h-0 lg:grid-cols-[minmax(0,1fr)_320px]">
               <AppointmentPatientLens
                 selectedPatient={selectedPatient}
                 onOpenPatientHub={onOpenPatientHub}
@@ -329,7 +356,7 @@ export default function AppointmentModal({
                 recentPatients={recentPatients}
                 patientDetailsQuery={patientDetailsQuery}
                 errors={errors}
-                patientPhone={patientPhone}
+                patientPhones={patientPhones}
                 patientAddress={patientAddress}
                 insurancePoliciesQuery={insurancePoliciesQuery}
                 primaryInsurancePolicy={primaryInsurancePolicy}
@@ -337,7 +364,7 @@ export default function AppointmentModal({
 
               <div className="min-h-0 overflow-y-auto bg-cf-surface lg:order-1">
                 {displayError ? (
-                  <div className="px-7 pt-6">
+                  <div className="px-5 pt-4">
                     <Notice tone="danger" title="Appointment was not saved">
                       {displayError}
                     </Notice>
@@ -345,8 +372,8 @@ export default function AppointmentModal({
                 ) : null}
 
                 <FormSection icon={Clock3} title="Schedule">
-                  <div className="grid gap-3 md:grid-cols-3">
-                    <div className="md:col-span-2 xl:col-span-1">
+                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                    <div className="md:col-span-1 xl:col-span-1">
                       <FieldLabel required>Appointment Time</FieldLabel>
                       <Controller
                         name="appointment_time"
@@ -356,7 +383,24 @@ export default function AppointmentModal({
                           <DateTimePicker
                             enableAccessibleFieldDOMStructure={false}
                             value={field.value}
-                            onChange={field.onChange}
+                            onChange={(nextValue) => {
+                              const nextDuration =
+                                getDurationMinutes(
+                                  field.value,
+                                  watchedEndTime
+                                ) ||
+                                selectedAppointmentType?.duration_minutes ||
+                                0;
+                              field.onChange(nextValue);
+                              setValue(
+                                "end_time",
+                                addMinutes(nextValue, nextDuration),
+                                {
+                                  shouldDirty: true,
+                                  shouldValidate: true,
+                                }
+                              );
+                            }}
                             slotProps={{
                               textField: {
                                 size: "small",
@@ -373,24 +417,34 @@ export default function AppointmentModal({
                     </div>
 
                     <div>
-                      <FieldLabel>End Time</FieldLabel>
-                      <ReadOnlyValueField
-                        value={
-                          computedEndTime
-                            ? formatTimeInTimeZone(
-                                computedEndTime,
-                                timeZone,
-                                "h:mm a"
-                              )
-                            : "—"
-                        }
-                      />
-                    </div>
-
-                    <div>
-                      <FieldLabel>Duration</FieldLabel>
-                      <ReadOnlyValueField
-                        value={durationMinutes ? `${durationMinutes} min` : "—"}
+                      <FieldLabel required>End Time</FieldLabel>
+                      <Controller
+                        name="end_time"
+                        control={control}
+                        rules={{
+                          required: "End time is required.",
+                          validate: (value) =>
+                            getDurationMinutes(watchedAppointmentTime, value) >
+                            0
+                              ? null
+                              : "End time must be after start time.",
+                        }}
+                        render={({ field }) => (
+                          <DateTimePicker
+                            enableAccessibleFieldDOMStructure={false}
+                            value={field.value}
+                            onChange={field.onChange}
+                            slotProps={{
+                              textField: {
+                                size: "small",
+                                fullWidth: true,
+                                error: !!errors.end_time,
+                                helperText: errors.end_time?.message || "",
+                                sx: MUI_DATE_FIELD_SX,
+                              },
+                            }}
+                          />
+                        )}
                       />
                     </div>
 
@@ -454,13 +508,30 @@ export default function AppointmentModal({
                       required
                       options={typeOptions}
                       value={watchedAppointmentType}
-                      onChange={(optionId) =>
+                      onChange={(optionId) => {
                         setValue("appointment_type", String(optionId), {
                           shouldDirty: true,
                           shouldValidate: true,
-                        })
-                      }
+                        });
+                        const nextType = typeOptions.find(
+                          (option) => String(option.id) === String(optionId)
+                        );
+                        if (watchedAppointmentTime && nextType) {
+                          setValue(
+                            "end_time",
+                            addMinutes(
+                              watchedAppointmentTime,
+                              nextType.duration_minutes || 0
+                            ),
+                            {
+                              shouldDirty: true,
+                              shouldValidate: true,
+                            }
+                          );
+                        }
+                      }}
                       error={errors.appointment_type?.message}
+                      singleRow
                       getMeta={(option) =>
                         option.duration_minutes
                           ? `${option.duration_minutes} min`
@@ -482,6 +553,7 @@ export default function AppointmentModal({
                         })
                       }
                       error={errors.status?.message}
+                      singleRow
                     />
                   </div>
                 </FormSection>
@@ -516,12 +588,12 @@ export default function AppointmentModal({
                 </FormSection>
 
                 <FormSection icon={ClipboardList} title="Visit Context">
-                  <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="grid gap-3 lg:grid-cols-2">
                     <div>
                       <FieldLabel>Reason</FieldLabel>
                       <Input
                         as="textarea"
-                        rows="7"
+                        rows="3"
                         placeholder="Annual checkup, medication follow-up, intake, or similar"
                         {...register("reason")}
                       />
@@ -531,7 +603,7 @@ export default function AppointmentModal({
                       <FieldLabel>Notes</FieldLabel>
                       <Input
                         as="textarea"
-                        rows="7"
+                        rows="3"
                         placeholder="Anything the team should know before or during the visit"
                         {...register("notes")}
                       />
@@ -542,7 +614,7 @@ export default function AppointmentModal({
             </div>
           </div>
 
-          <div className="flex shrink-0 flex-col gap-3 border-t border-cf-border bg-cf-surface px-7 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex shrink-0 flex-col gap-3 border-t border-cf-border bg-cf-surface px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-center gap-2">
               {mode === "edit" ? (
                 <Button type="button" onClick={onDelete} variant="danger">
