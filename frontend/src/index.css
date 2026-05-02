@@ -317,85 +317,6 @@
     transform-origin: 50% 46%;
   }
 
-  .cf-modal-panel.cf-notes-modal {
-    background: var(--color-cf-surface);
-    box-shadow:
-      0 28px 80px -48px rgba(15, 23, 42, 0.55),
-      var(--shadow-panel-lg);
-  }
-
-  .cf-modal-panel.cf-notes-modal.is-opening {
-    animation: cf-notes-modal-in 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
-    transform-origin: 50% 100%;
-  }
-
-  .cf-modal-panel.cf-notes-modal.is-closing {
-    animation: cf-notes-modal-out 170ms cubic-bezier(0.4, 0, 1, 1) both;
-    transform-origin: 50% 100%;
-  }
-
-  .cf-notes-surface {
-    background:
-      radial-gradient(
-        circle at 8% 0%,
-        color-mix(in srgb, var(--color-cf-sidebar-accent) 14%, transparent),
-        transparent 21rem
-      ),
-      linear-gradient(
-        180deg,
-        var(--color-cf-surface) 0%,
-        var(--color-cf-page-bg) 100%
-      );
-  }
-
-  .cf-notes-icon {
-    display: flex;
-    height: 2.75rem;
-    width: 2.75rem;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--color-cf-border);
-    border-radius: 1rem;
-    background: var(--color-cf-surface);
-    color: var(--color-cf-text);
-    box-shadow: var(--shadow-panel);
-  }
-
-  .cf-notes-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    border: 1px solid var(--color-cf-border);
-    border-radius: 9999px;
-    background: var(--color-cf-surface);
-    padding: 0.375rem 0.75rem;
-    color: var(--color-cf-text-subtle);
-    font-size: 0.75rem;
-    font-weight: 500;
-    box-shadow: var(--shadow-panel);
-  }
-
-  .cf-notes-editor-card {
-    border: 1px solid var(--color-cf-border);
-    border-radius: 1.35rem;
-    background: var(--color-cf-surface);
-    padding: 0.75rem;
-    box-shadow: 0 22px 60px -42px rgba(15, 23, 42, 0.45);
-  }
-
-  .cf-notes-editor {
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-cf-surface-muted) 58%, transparent),
-      var(--color-cf-surface)
-    );
-  }
-
-  .cf-notes-editor:focus {
-    background: var(--color-cf-surface);
-  }
-
   .cf-loading-screen {
     background:
       radial-gradient(
@@ -672,32 +593,6 @@
   to {
     opacity: 0;
     transform: translateY(10px) scale(0.985);
-  }
-}
-
-@keyframes cf-notes-modal-in {
-  from {
-    opacity: 0;
-    transform: translateY(22px) scale(0.975);
-  }
-  70% {
-    opacity: 1;
-    transform: translateY(-2px) scale(1.002);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes cf-notes-modal-out {
-  from {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(16px) scale(0.985);
   }
 }
 
