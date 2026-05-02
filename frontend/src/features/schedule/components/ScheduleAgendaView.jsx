@@ -5,6 +5,14 @@ import {
   formatDateOnlyInTimeZone,
   parseDateOnlyInTimeZone,
 } from "../../../shared/utils/dateTime";
+import {
+  DEFAULT_APPOINTMENT_BLOCK_DISPLAY,
+  sanitizeAppointmentBlockDisplay,
+} from "../../../shared/constants/appointmentBlockDisplay";
+import {
+  getAppointmentDetailText,
+  getAppointmentTimeLabel,
+} from "../../../shared/utils/appointmentBlockDetails";
 import { MAX_SCHEDULE_COLUMNS } from "../utils/scheduleConstants";
 import { isFacilityOperatingDate } from "../utils/scheduleOperatingHours";
 
@@ -32,6 +40,17 @@ function doesAppointmentMatchResource(appointment, resource) {
   return (
     String(appointment.resource || "") === String(resource.resourceId || "")
   );
+}
+
+function getAppointmentColorRoles(appointment, display) {
+  const statusColor = appointment.status_color || "#ffffff";
+  const visitTypeColor = appointment.appointment_type_color || statusColor;
+  const useStatusBlockColor = display.colorMode === "statusBlockVisitChip";
+
+  return {
+    blockColor: useStatusBlockColor ? statusColor : visitTypeColor,
+    chipColor: useStatusBlockColor ? visitTypeColor : statusColor,
+  };
 }
 
 function AgendaColumnHeader({
@@ -130,6 +149,7 @@ export default function ScheduleAgendaView({
   visibleDates = [],
   columnResourceKeys = [],
   resourceOptions = [],
+  appointmentBlockDisplay = DEFAULT_APPOINTMENT_BLOCK_DISPLAY,
   onVisibleDatesChange,
   onColumnResourceKeysChange,
   onVisibleDayCountChange,
@@ -144,6 +164,7 @@ export default function ScheduleAgendaView({
     () => new Map(resourceOptions.map((resource) => [resource.key, resource])),
     [resourceOptions]
   );
+  const display = sanitizeAppointmentBlockDisplay(appointmentBlockDisplay);
 
   const visibleDayEntries = useMemo(
     () =>
@@ -375,44 +396,52 @@ export default function ScheduleAgendaView({
                             {hourLabel}
                           </div>
                           <div className="space-y-2">
-                            {items.map((appointment) => (
-                              <button
-                                key={appointment.id}
-                                type="button"
-                                onDoubleClick={() => appointment.onEdit?.()}
-                                className="w-full rounded-2xl border border-white/70 px-3 py-3 text-left shadow-sm transition hover:shadow-md"
-                                style={{
-                                  backgroundColor:
-                                    appointment.status_color || "#ffffff",
-                                }}
-                              >
-                                <div className="flex items-start gap-2">
-                                  <div
-                                    className="mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full border border-white/70"
-                                    style={{
-                                      backgroundColor:
-                                        appointment.appointment_type_color ||
-                                        "#cbd5e1",
-                                    }}
-                                  />
-                                  <div className="min-w-0 flex-1">
-                                    <div className="truncate text-sm font-semibold text-cf-text">
-                                      {appointment.patient_name}
-                                    </div>
-                                    <div className="mt-0.5 truncate text-xs text-cf-text-muted">
-                                      {appointment.time}
-                                      {appointment.room
-                                        ? ` • ${appointment.room}`
-                                        : ""}
-                                    </div>
-                                    <div className="mt-1 truncate text-xs text-cf-text-muted">
-                                      {appointment.appointment_type_name ||
-                                        "General"}
+                            {items.map((appointment) => {
+                              const { blockColor, chipColor } =
+                                getAppointmentColorRoles(appointment, display);
+                              const timeLabel = getAppointmentTimeLabel(
+                                appointment,
+                                display
+                              );
+                              const detailText = getAppointmentDetailText(
+                                appointment,
+                                display
+                              );
+
+                              return (
+                                <button
+                                  key={appointment.id}
+                                  type="button"
+                                  onDoubleClick={() => appointment.onEdit?.()}
+                                  className="w-full rounded-2xl border border-white/70 px-3 py-3 text-left shadow-sm transition hover:shadow-md"
+                                  style={{ backgroundColor: blockColor }}
+                                >
+                                  <div className="flex items-start gap-2">
+                                    {display.showStatusChip ? (
+                                      <div
+                                        className="mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full border border-white/70"
+                                        style={{
+                                          backgroundColor: chipColor,
+                                        }}
+                                      />
+                                    ) : null}
+                                    <div className="min-w-0 flex-1">
+                                      <div className="truncate text-sm font-semibold text-cf-text">
+                                        {appointment.patient_name}
+                                      </div>
+                                      <div className="mt-0.5 truncate text-xs text-cf-text-muted">
+                                        {timeLabel}
+                                      </div>
+                                      {detailText ? (
+                                        <div className="mt-1 truncate text-xs text-cf-text-muted">
+                                          {detailText}
+                                        </div>
+                                      ) : null}
                                     </div>
                                   </div>
-                                </div>
-                              </button>
-                            ))}
+                                </button>
+                              );
+                            })}
                           </div>
                         </div>
                       ))}

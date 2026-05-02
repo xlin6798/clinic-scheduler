@@ -29,10 +29,10 @@ export default function SharedTimeRailGrid({
   return (
     <div className="grid h-full min-w-0 grid-rows-[auto_minmax(0,1fr)] bg-cf-surface/60">
       <div
-        className="sticky top-0 z-10 grid border-b border-cf-border bg-cf-surface/95 backdrop-blur"
+        className="sticky top-0 z-10 grid border-b border-cf-border bg-cf-surface"
         style={{ gridTemplateColumns: sharedTimeRailGridTemplate }}
       >
-        <div className="select-none bg-cf-surface px-2 py-3 text-right font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-cf-text-subtle">
+        <div className="flex h-12 select-none items-center justify-end bg-cf-surface px-2 text-right font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-cf-text-subtle">
           {timeZoneAbbreviation}
         </div>
         {visibleDayEntries.map((entry) => (

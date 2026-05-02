@@ -4,6 +4,8 @@ import { formatDateOnlyInTimeZone } from "../../../shared/utils/dateTime";
 import { SLOT_INTERVAL_OPTIONS } from "../utils/scheduleConstants";
 import { getTimeZoneAbbreviation } from "../utils/scheduleDateUtils";
 
+const SCHEDULE_COLUMN_HEADER_HEIGHT = "h-12";
+
 export function DayCardHeader({
   date,
   timeZone,
@@ -22,11 +24,21 @@ export function DayCardHeader({
   const timeZoneAbbreviation = getTimeZoneAbbreviation(date, timeZone);
 
   return (
-    <div className="grid grid-cols-[56px_minmax(0,1fr)] border-b border-cf-border">
-      <div className="select-none bg-cf-surface px-2 py-3 text-right font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-cf-text-subtle">
+    <div
+      className={[
+        "grid grid-cols-[56px_minmax(0,1fr)] border-b border-cf-border bg-cf-surface",
+        showHeaderControls ? "" : SCHEDULE_COLUMN_HEADER_HEIGHT,
+      ].join(" ")}
+    >
+      <div className="flex h-full select-none items-center justify-end bg-cf-surface px-2 text-right font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-cf-text-subtle">
         {timeZoneAbbreviation}
       </div>
-      <div className="min-w-0 bg-gradient-to-b from-cf-surface-muted to-cf-surface px-3 py-2">
+      <div
+        className={[
+          "min-w-0 bg-cf-surface px-3",
+          showHeaderControls ? "py-2" : "flex h-full items-center",
+        ].join(" ")}
+      >
         <div className="flex min-w-0 items-start justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
             <span className="min-w-0 truncate text-sm font-semibold text-cf-text">
@@ -109,8 +121,13 @@ export function ResourceColumnHeader({ resource, isOperatingDay = true }) {
   const label = resource?.label || "Unassigned resource";
 
   return (
-    <div className="min-w-0 bg-cf-surface px-3 py-3">
-      <div className="flex min-w-0 items-center justify-between gap-3">
+    <div
+      className={[
+        SCHEDULE_COLUMN_HEADER_HEIGHT,
+        "min-w-0 bg-cf-surface px-3",
+      ].join(" ")}
+    >
+      <div className="flex h-full min-w-0 items-center justify-between gap-3">
         <div className="min-w-0 truncate text-sm font-semibold text-cf-text">
           {label}
         </div>

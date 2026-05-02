@@ -2,6 +2,10 @@ import {
   DEFAULT_APPOINTMENT_BLOCK_DISPLAY,
   sanitizeAppointmentBlockDisplay,
 } from "../../../shared/constants/appointmentBlockDisplay";
+import {
+  getAppointmentDetailText,
+  getAppointmentTimeLabel,
+} from "../../../shared/utils/appointmentBlockDetails";
 import { getPatientChartName } from "../../patients/utils/patientDisplay";
 
 function parseHexColor(value) {
@@ -111,31 +115,24 @@ export default function AppointmentBlock({
 }) {
   const display = sanitizeAppointmentBlockDisplay(displayOptions);
   const statusColor = appointment.status_color || "#ffffff";
-  const blockColor = appointment.appointment_type_color || statusColor;
+  const visitTypeColor = appointment.appointment_type_color || statusColor;
+  const useStatusBlockColor = display.colorMode === "statusBlockVisitChip";
+  const blockColor = useStatusBlockColor ? statusColor : visitTypeColor;
   const borderColor =
     shadeHexColor(blockColor, -0.22) || "rgba(15, 23, 42, 0.16)";
   const tone = getReadableTone(blockColor);
-  const chipColor = statusColor || blockColor || "#ccc";
-  const chipLabel = appointment.status_name || "Unscheduled";
-  const durationLabel = appointment.duration_minutes
-    ? `${appointment.duration_minutes}m`
-    : "";
-  const timeLabel = [appointment.time, durationLabel]
-    .filter(Boolean)
-    .join(" · ");
+  const chipColor = useStatusBlockColor
+    ? visitTypeColor || blockColor || "#ccc"
+    : statusColor || blockColor || "#ccc";
+  const chipLabel = useStatusBlockColor
+    ? appointment.appointment_type_name || "Visit"
+    : appointment.status_name || "Unscheduled";
+  const timeLabel = getAppointmentTimeLabel(appointment, display);
   const patientName = getPatientChartName(
     appointment,
     appointment.patient_name || "Appointment"
   );
-  const detailText = [
-    display.showVisitType ? appointment.appointment_type_name : "",
-    display.showRoom && appointment.room ? `Room ${appointment.room}` : "",
-    display.showResource ? appointment.resource_name : "",
-    display.showProvider ? appointment.rendering_provider_name : "",
-    display.showReason ? appointment.reason : "",
-  ]
-    .filter(Boolean)
-    .join(" • ");
+  const detailText = getAppointmentDetailText(appointment, display);
   const actionLabel = [patientName, appointment.time, appointment.status_name]
     .filter(Boolean)
     .join(", ");
