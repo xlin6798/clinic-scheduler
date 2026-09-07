@@ -289,6 +289,86 @@ class AppointmentSlotHold(models.Model):
         )
 
 
+class AppointmentBookingHold(models.Model):
+    """Advisory interval ownership; terminal sessions remain as tombstones."""
+
+    session_id = models.UUIDField(unique=True)
+    facility = models.ForeignKey(
+        "facilities.Facility", on_delete=models.CASCADE, related_name="booking_holds"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="appointment_booking_holds",
+    )
+    user_display_name = models.CharField(max_length=150, blank=True)
+    resource = models.ForeignKey(
+        "facilities.FacilityResource",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="booking_holds",
+    )
+    rendering_provider = models.ForeignKey(
+        "facilities.Staff",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="booking_holds",
+    )
+    start_time = models.DateTimeField(null=True, blank=True)
+    end_time = models.DateTimeField(null=True, blank=True)
+    revision = models.PositiveBigIntegerField()
+    state = models.CharField(
+        max_length=10,
+        default="inactive",
+        choices=[
+            (state, state) for state in ("active", "inactive", "released", "revoked")
+        ],
+    )
+    started_at = models.DateTimeField(auto_now_add=True)
+    last_seen_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    ~models.Q(state="active")
+                    | (
+                        models.Q(start_time__isnull=False, end_time__isnull=False)
+                        & models.Q(end_time__gt=models.F("start_time"))
+                    )
+                ),
+                name="booking_hold_active_interval",
+            ),
+            models.CheckConstraint(
+                check=models.Q(revision__gte=1), name="booking_hold_positive_revision"
+            ),
+            models.CheckConstraint(
+                check=models.Q(state__in=["active", "inactive", "released", "revoked"]),
+                name="booking_hold_valid_state",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=["facility", "resource", "start_time"],
+                name="booking_hold_resource_start",
+            ),
+            models.Index(
+                fields=["facility", "rendering_provider", "start_time"],
+                name="booking_hold_provider_start",
+            ),
+        ]
+
+    def is_active(self, reference_time=None):
+        reference_time = reference_time or timezone.now()
+        return (
+            self.state == "active"
+            and self.last_seen_at >= reference_time - APPOINTMENT_SLOT_HOLD_TIMEOUT
+        )
+
+
 class BookableSlot(models.Model):
     """Admin-curated time slot a patient can book through the portal.
 
